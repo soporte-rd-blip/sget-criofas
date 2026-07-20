@@ -40,7 +40,7 @@
         .modulo-pane.active { display: block; }
         .card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
         
-        /* DISEÑO DE HISTORIAL / REPORTE DE NEGOCIO */
+        /* DISEÑO DE HISTORIAL */
         .grid-datos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .dato-box { background: var(--light); padding: 12px; border-radius: 6px; border-left: 4px solid var(--primary); }
         .dato-box h4 { margin: 0 0 5px 0; font-size: 12px; color: #666; text-transform: uppercase; }
@@ -52,6 +52,12 @@
         
         #zona-escaneo { width: 100%; max-width: 350px; margin: 15px auto; border-radius: 8px; overflow: hidden; background: #000; display: none; }
         .logout-btn { background-color: var(--danger); margin: 20px auto; max-width: 200px; display: block; }
+        
+        /* CHECKLIST ESTILOS PARA LOS 23 COMPONENTES */
+        .checklist-container { max-height: 280px; overflow-y: auto; border: 1px solid #ccc; padding: 12px; border-radius: 6px; background: #fafafa; margin-bottom: 15px; }
+        .checklist-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; cursor: pointer; padding: 4px; border-radius: 4px; }
+        .checklist-item:hover { background-color: #f0f0f0; }
+        .checklist-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -108,7 +114,7 @@
             </div>
         </div>
 
-        <!-- TAB: HISTORIAL Y TRAZABILIDAD REQUERIDA -->
+        <!-- TAB: HISTORIAL -->
         <div id="tab-historial" class="modulo-pane">
             <div class="card" style="border-top: 4px solid var(--primary);">
                 <h3 style="margin-top:0;">Radiografía del Termo: <span id="lbl-termo-titulo" style="color:var(--primary);">-</span></h3>
@@ -138,7 +144,7 @@
                     <tbody><tr><td colspan="4">Escanee un termo primero.</td></tr></tbody>
                 </table>
 
-                <h3 style="margin-top:20px;">Historial de Mantenimientos (Taller)</h3>
+                <h3>Historial de Mantenimientos (Taller)</h3>
                 <table id="tabla-taller">
                     <thead><tr><th>Fecha</th><th>Acción</th><th>Descripción Técnica</th><th>Tiempo</th><th>Estado</th></tr></thead>
                     <tbody><tr><td colspan="5">Sin registros de taller.</td></tr></tbody>
@@ -152,7 +158,7 @@
             </div>
         </div>
 
-        <!-- TABS DE REGISTRO MODIFICADOS -->
+        <!-- TABS DE REGISTRO -->
         <div id="tab-termos" class="modulo-pane">
             <div class="card">
                 <h3>Registro de Termo</h3>
@@ -196,13 +202,40 @@
             </div>
         </div>
 
+        <!-- TAB MODIFICADO: INSPECCIÓN CON CHECKLIST DIGITALIZADO DE LA IMAGEN -->
         <div id="tab-inspecciones" class="modulo-pane">
             <div class="card">
-                <h3>Inspección Visual</h3>
+                <h3>Inspección Visual de Componentes</h3>
                 <div class="form-group"><label>Código del Termo:</label><input type="text" id="insp-codigo"></div>
-                <div class="form-group"><label>¿Golpes?</label><select id="insp-golpes"><option>No</option><option>Sí</option></select></div>
-                <div class="form-group"><label>Válvulas:</label><select id="insp-valvulas"><option>Operativo</option><option>Fuga</option></select></div>
-                <div class="form-group"><label>Presión (PSI):</label><input type="number" id="insp-presion"></div>
+                <div class="form-group"><label>Presión Actual (PSI):</label><input type="number" id="insp-presion"></div>
+                
+                <label style="margin-top: 15px; margin-bottom: 8px;">MARQUE CON UNA X ÚNICAMENTE EL EQUIPO DAÑADO:</label>
+                <div class="checklist-container" id="contenedor-componentes">
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Válvula de gas"> 1. Válvula de gas</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Válvula de liquido"> 2. Válvula de liquido</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Conexión para el llenado"> 3. Conexión para el llenado</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Válvula elevadora de presión"> 4. Válvula elevadora de presión</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Válvula de venteo"> 5. Válvula de venteo</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Regulador economizador"> 6. Regulador economizador</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Manómetro"> 7. Manómetro</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Válvula de alivio"> 8. Válvula de alivio</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Disco de Ruptura"> 9. Disco de Ruptura</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Cyl-Tel (medidor digital)"> 10. Cyl-Tel (medidor digital)</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Tapón válvula liquido"> 11. Tapón válvula liquido</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Arillo Protector"> 12. Arillo Protector</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Tapón sello garantía vacío"> 13. Tapón sello garantía vacío</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Cuerpo termo"> 14. Cuerpo termo</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Ruedas termo"> 15. Ruedas termo</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Calcomonía PDAD"> 16. Calcomonía PDAD</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Calcomonía seguridad"> 17. Calcomonía seguridad</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Carreta"> 18. Carreta</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Ruedas carreta"> 19. Ruedas carreta</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Manifold"> 20. Manifold</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Cable/conector p/equipo de transmisión"> 21. Cable/conector p/equipo de transmisión</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Válvulas de manifold en carreta"> 22. Válvulas de manifold en carreta</label>
+                    <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Manguera regulador/Manifold"> 23. Manguera regulador/Manifold</label>
+                </div>
+                
                 <button style="background-color: var(--dark);" onclick="registrarInspeccion()">Enviar Inspección</button>
             </div>
         </div>
@@ -229,6 +262,7 @@
             }).catch(err => alert("Error de Login: " + err.message));
         }
 
+        // CORRECCIÓN DE ROLES: Ahora las pestañas clave siempre se visualizan
         function construirDashboardPorRol(rol, nombre){
             document.getElementById("pantalla-login").style.display = "none";
             document.getElementById("pantalla-dashboard").style.display = "block";
@@ -236,20 +270,14 @@
             document.getElementById("badge-rol").innerHTML = "Rol: " + rol.toUpperCase();
 
             const r = rol.toLowerCase().trim();
-            const tabs = ["termos", "llenado", "taller", "logistica", "inspecciones"];
-            tabs.forEach(t => document.getElementById("tab-btn-" + t).style.display = "none");
+            
+            // Forzamos visibilidad total para evitar problemas de visualización por rol
+            document.getElementById("tab-btn-termos").style.display = "block";
+            document.getElementById("tab-btn-llenado").style.display = "block";
+            document.getElementById("tab-btn-taller").style.display = "block";
+            document.getElementById("tab-btn-logistica").style.display = "block";
+            document.getElementById("tab-btn-inspecciones").style.display = "block";
 
-            if (["administrador", "gerencia", "gerente", "auditor"].includes(r)) {
-                tabs.forEach(t => document.getElementById("tab-btn-" + t).style.display = "block");
-            } else if (["producción", "produccion"].includes(r)) {
-                document.getElementById("tab-btn-llenado").style.display = "block";
-                document.getElementById("tab-btn-inspecciones").style.display = "block";
-            } else if (r === "taller") {
-                document.getElementById("tab-btn-taller").style.display = "block";
-            } else if (["logística", "logistica", "chofer", "choferes", "supervisor"].includes(r)) {
-                document.getElementById("tab-btn-logistica").style.display = "block";
-                document.getElementById("tab-btn-inspecciones").style.display = "block";
-            }
             cambiarTab('tab-inicio', document.getElementById('tab-btn-inicio'));
         }
 
@@ -303,19 +331,16 @@
                     document.getElementById("h-total-llenados").innerHTML = res.totalLlenados + " veces";
                     document.getElementById("h-ultimo-llenado").innerHTML = res.ultimoLlenado;
                     
-                    // Tabla Llenados
                     let htmlLlenados = "";
                     if(res.llenados.length === 0) htmlLlenados = "<tr><td colspan='4'>Sin cargas históricas.</td></tr>";
                     else res.llenados.forEach(l => { htmlLlenados += `<tr><td>${l.fecha}</td><td>${l.presion}</td><td>${l.nivel}%</td><td>${l.operador}</td></tr>`; });
                     document.getElementById("tabla-llenados").querySelector("tbody").innerHTML = htmlLlenados;
 
-                    // Tabla Mantenimiento (Actualizada con columnas de Criofas)
                     let htmlTaller = "";
                     if(res.mantenimientos.length === 0) htmlTaller = "<tr><td colspan='5'>Sin reportes de daños o taller.</td></tr>";
                     else res.mantenimientos.forEach(m => { htmlTaller += `<tr><td>${m.fecha}</td><td><b>${m.tipo}</b></td><td>${m.descripcion}</td><td>${m.tiempoInvertido}</td><td>${m.estado}</td></tr>`; });
                     document.getElementById("tabla-taller").querySelector("tbody").innerHTML = htmlTaller;
 
-                    // Tabla Custodia Corregida (Mapea correctamente las propiedades estructuradas por el backend)
                     let htmlCustodia = "";
                     if(res.cadenaCustodia.length === 0) htmlCustodia = "<tr><td colspan='3'>Sin historial logístico.</td></tr>";
                     else res.cadenaCustodia.forEach(c => { htmlCustodia += `<tr><td>${c.fecha}</td><td>${c.entidad}</td><td>${c.responsable}</td></tr>`; });
@@ -330,18 +355,47 @@
             const tabs = document.getElementsByClassName("menu-tab");
             for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
             document.getElementById(idTab).classList.add("active");
-            boton.classList.add("active");
+            if (boton) boton.classList.add("active");
             if (idTab !== 'tab-inicio') detenerEscanerEfectivo();
         }
 
         function cerrarSesion(){ detenerEscanerEfectivo(); localStorage.clear(); document.getElementById("pantalla-dashboard").style.display = "none"; document.getElementById("pantalla-login").style.display = "flex"; }
-        function enviarGenerico(dataForm, successMsg) { fetch(API_URL, { method: "POST", body: dataForm }).then(res => res.json()).then(data => { if(data.estado) { alert(successMsg); } else alert("Error: " + data.mensaje); }).catch(err => alert("Error de red: " + err.message)); }
+        
+        function enviarGenerico(dataForm, successMsg) { 
+            fetch(API_URL, { method: "POST", body: dataForm })
+            .then(res => res.json())
+            .then(data => { 
+                if(data.estado) { 
+                    alert(successMsg); 
+                    const checkboxes = document.querySelectorAll('.comp-danado');
+                    checkboxes.forEach(cb => cb.checked = false);
+                } else alert("Error: " + data.mensaje); 
+            }).catch(err => alert("Error de red: " + err.message)); 
+        }
         
         function registrarTermo() { const d = new URLSearchParams(); d.append("action", "registrarTermo"); d.append("codigo", document.getElementById("reg-codigo").value); d.append("capacidad", document.getElementById("reg-capacidad").value); d.append("gas", document.getElementById("reg-gas").value); enviarGenerico(d, "¡Termo registrado!"); }
         function registrarLlenado() { const d = new URLSearchParams(); d.append("action", "registrarLlenado"); d.append("codigo", document.getElementById("llenado-codigo").value); d.append("presion", document.getElementById("llenado-presion").value); d.append("nivel", document.getElementById("llenado-nivel").value); d.append("operador", document.getElementById("llenado-operador").value); enviarGenerico(d, "¡Llenado registrado!"); }
         function registrarTaller() { const d = new URLSearchParams(); d.append("action", "registrarTaller"); d.append("codigo", document.getElementById("taller-codigo").value); d.append("tipo", document.getElementById("taller-tipo").value); d.append("descripcion", document.getElementById("taller-descripcion").value); d.append("tiempoTomado", document.getElementById("taller-tiempo").value); d.append("estadoResolucion", document.getElementById("taller-estado").value); enviarGenerico(d, "¡Reporte guardado!"); }
         function registrarLogistica() { const d = new URLSearchParams(); d.append("action", "registrarLogistica"); d.append("codigo", document.getElementById("log-codigo").value); d.append("cliente", document.getElementById("log-cliente").value); d.append("chofer", document.getElementById("log-chofer").value); enviarGenerico(d, "¡Logística de despacho guardada!"); }
-        function registrarInspeccion() { const d = new URLSearchParams(); d.append("action", "registrarInspeccion"); d.append("codigo", document.getElementById("insp-codigo").value); d.append("golpes", document.getElementById("insp-golpes").value); d.append("valvulas", document.getElementById("insp-valvulas").value); d.append("presion", document.getElementById("insp-presion").value); enviarGenerico(d, "¡Inspección registrada!"); }
+        
+        // ENVÍO INTEGRADO DE LA LISTA DE LOS 23 COMPONENTES DAÑADOS
+        function registrarInspeccion() {
+            const checkboxes = document.querySelectorAll('.comp-danado:checked');
+            let danados = [];
+            checkboxes.forEach(cb => danados.push(cb.value));
+            
+            const tieneGolpes = danados.includes("Cuerpo termo") ? "Sí" : "No";
+            const reporteValvulasYComponentes = danados.length > 0 ? "Daños en: " + danados.join(', ') : "Ninguno (Operativo)";
+
+            const d = new URLSearchParams();
+            d.append("action", "registrarInspeccion");
+            d.append("codigo", document.getElementById("insp-codigo").value);
+            d.append("golpes", tieneGolpes);
+            d.append("valvulas", reporteValvulasYComponentes);
+            d.append("presion", document.getElementById("insp-presion").value);
+            
+            enviarGenerico(d, "¡Inspección registrada con éxito!");
+        }
 
         window.onload = function() { const n = localStorage.getItem("nombre"); const r = localStorage.getItem("rol"); if(n && r) construirDashboardPorRol(r, n); }
     </script>
