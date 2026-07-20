@@ -40,6 +40,10 @@
         .modulo-pane.active { display: block; }
         .card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
         
+        /* FORMULARIO AVANZADO LLENADO */
+        .seccion-titulo { font-size: 13px; font-weight: bold; color: var(--primary); text-transform: uppercase; margin: 15px 0 8px 0; border-bottom: 1px dashed #ccc; padding-bottom: 4px; }
+        .fila-doble { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
         /* DISEÑO DE HISTORIAL */
         .grid-datos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .dato-box { background: var(--light); padding: 12px; border-radius: 6px; border-left: 4px solid var(--primary); }
@@ -53,7 +57,7 @@
         #zona-escaneo { width: 100%; max-width: 350px; margin: 15px auto; border-radius: 8px; overflow: hidden; background: #000; display: none; }
         .logout-btn { background-color: var(--danger); margin: 20px auto; max-width: 200px; display: block; }
         
-        /* CHECKLIST ESTILOS PARA LOS 23 COMPONENTES */
+        /* CHECKLIST COMPONENTES */
         .checklist-container { max-height: 280px; overflow-y: auto; border: 1px solid #ccc; padding: 12px; border-radius: 6px; background: #fafafa; margin-bottom: 15px; }
         .checklist-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; cursor: pointer; padding: 4px; border-radius: 4px; }
         .checklist-item:hover { background-color: #f0f0f0; }
@@ -158,7 +162,7 @@
             </div>
         </div>
 
-        <!-- TABS DE REGISTRO -->
+        <!-- TAB: TERMOS -->
         <div id="tab-termos" class="modulo-pane">
             <div class="card">
                 <h3>Registro de Termo</h3>
@@ -169,17 +173,51 @@
             </div>
         </div>
 
+        <!-- TAB: LLENADO (CON TODAS LAS NUEVAS MÉTRICAS) -->
         <div id="tab-llenado" class="modulo-pane">
             <div class="card">
-                <h3>Registrar Llenado</h3>
-                <div class="form-group"><label>Código del Termo:</label><input type="text" id="llenado-codigo"></div>
-                <div class="form-group"><label>Presión Entrada (PSI):</label><input type="number" id="llenado-presion"></div>
-                <div class="form-group"><label>Nivel Final (%):</label><input type="number" id="llenado-nivel"></div>
-                <div class="form-group"><label>Operador:</label><input type="text" id="llenado-operador"></div>
+                <h3>Registrar Proceso de Llenado</h3>
+                
+                <div class="form-group">
+                    <label>Código del Termo:</label>
+                    <input type="text" id="llenado-codigo" placeholder="Escanee o digite">
+                </div>
+
+                <div class="seccion-titulo">Presiones de Operación (PSI)</div>
+                <div class="fila-doble">
+                    <div class="form-group"><label>PSI ORCA Inicio:</label><input type="number" id="llenado-orca-ini"></div>
+                    <div class="form-group"><label>PSI ORCA Fin:</label><input type="number" id="llenado-orca-fin"></div>
+                </div>
+                <div class="fila-doble">
+                    <div class="form-group"><label>PSI Termo Inicio:</label><input type="number" id="llenado-termo-ini"></div>
+                    <div class="form-group"><label>PSI Termo Fin:</label><input type="number" id="llenado-termo-fin"></div>
+                </div>
+
+                <div class="seccion-titulo">Capacidad & Volumen Líquido</div>
+                <div class="fila-doble">
+                    <div class="form-group"><label>% Inicio:</label><input type="number" id="llenado-pct-ini"></div>
+                    <div class="form-group"><label>% Fin:</label><input type="number" id="llenado-pct-fin"></div>
+                </div>
+                <div class="fila-doble">
+                    <div class="form-group"><label>Cantidad Cargada:</label><input type="number" id="llenado-cantidad" placeholder="Lts/Gals"></div>
+                    <div class="form-group"><label>Tiempo (minutos):</label><input type="number" id="llenado-tiempo" placeholder="Ej. 15"></div>
+                </div>
+
+                <div class="seccion-titulo">Información de Control</div>
+                <div class="form-group">
+                    <label>Operador / Técnico Responsable:</label>
+                    <input type="text" id="llenado-operador">
+                </div>
+                <div class="form-group">
+                    <label>Observaciones del Proceso:</label>
+                    <textarea id="llenado-observaciones" rows="2" placeholder="Detalles o novedades encontradas..."></textarea>
+                </div>
+
                 <button style="background-color: var(--success);" onclick="registrarLlenado()">Confirmar Llenado</button>
             </div>
         </div>
 
+        <!-- TAB: TALLER -->
         <div id="tab-taller" class="modulo-pane">
             <div class="card">
                 <h3>Taller & Mantenimiento</h3>
@@ -192,6 +230,7 @@
             </div>
         </div>
 
+        <!-- TAB: LOGÍSTICA -->
         <div id="tab-logistica" class="modulo-pane">
             <div class="card">
                 <h3>Despacho / Logística</h3>
@@ -202,7 +241,7 @@
             </div>
         </div>
 
-        <!-- TAB INSPECCIÓN -->
+        <!-- TAB: INSPECCIÓN -->
         <div id="tab-inspecciones" class="modulo-pane">
             <div class="card">
                 <h3>Inspección Visual de Componentes</h3>
@@ -243,6 +282,7 @@
         <button class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
 
+    <!-- ================= JAVASCRIPT CORREGIDO Y CONTROLADO ================= -->
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbwyZ0JJo1oWUobhaNqTYgn1NuHJM2Rhh7ESIhUCX7ypfyfUH5TiLut684CGHAigWeXR/exec";
         let html5QrcodeScanner = null;
@@ -337,7 +377,6 @@
                 return;
             }
 
-            // CORREGIDO: Ahora usa 'codigo' en lugar de 'code' para evitar congelamiento
             document.getElementById("lbl-termo-titulo").innerHTML = codigo.toUpperCase();
             cambiarTab('tab-historial', document.getElementById('tab-btn-historial'));
             
@@ -380,22 +419,68 @@
 
         function cerrarSesion(){ detenerEscanerEfectivo(); localStorage.clear(); document.getElementById("pantalla-dashboard").style.display = "none"; document.getElementById("pantalla-login").style.display = "flex"; }
         
-        function enviarGenerico(dataForm, successMsg) { 
+        function enviarGenerico(dataForm, successMsg, idTabLimpieza) { 
             fetch(API_URL, { method: "POST", body: dataForm })
             .then(res => res.json())
             .then(data => { 
                 if(data.estado) { 
                     alert(successMsg); 
-                    const checkboxes = document.querySelectorAll('.comp-danado');
-                    checkboxes.forEach(cb => cb.checked = false);
+                    if(idTabLimpieza) {
+                        const inputs = document.querySelectorAll(`#${idTabLimpieza} input:not([readonly])`);
+                        inputs.forEach(i => i.value = "");
+                        const textareas = document.querySelectorAll(`#${idTabLimpieza} textarea`);
+                        textareas.forEach(t => t.value = "");
+                    }
                 } else alert("Error: " + data.mensaje); 
             }).catch(err => alert("Error de red: " + err.message)); 
         }
         
-        function registrarTermo() { const d = new URLSearchParams(); d.append("action", "registrarTermo"); d.append("codigo", document.getElementById("reg-codigo").value); d.append("capacidad", document.getElementById("reg-capacidad").value); d.append("gas", document.getElementById("reg-gas").value); enviarGenerico(d, "¡Termo registrado!"); }
-        function registrarLlenado() { const d = new URLSearchParams(); d.append("action", "registrarLlenado"); d.append("codigo", document.getElementById("llenado-codigo").value); d.append("presion", document.getElementById("llenado-presion").value); d.append("nivel", document.getElementById("llenado-nivel").value); d.append("operador", document.getElementById("llenado-operador").value); enviarGenerico(d, "¡Llenado registrado!"); }
-        function registrarTaller() { const d = new URLSearchParams(); d.append("action", "registrarTaller"); d.append("codigo", document.getElementById("taller-codigo").value); d.append("tipo", document.getElementById("taller-tipo").value); d.append("descripcion", document.getElementById("taller-descripcion").value); d.append("tiempoTomado", document.getElementById("taller-tiempo").value); d.append("estadoResolucion", document.getElementById("taller-estado").value); enviarGenerico(d, "¡Reporte guardado!"); }
-        function registrarLogistica() { const d = new URLSearchParams(); d.append("action", "registrarLogistica"); d.append("codigo", document.getElementById("log-codigo").value); d.append("cliente", document.getElementById("log-cliente").value); d.append("chofer", document.getElementById("log-chofer").value); enviarGenerico(d, "¡Logística de despacho guardada!"); }
+        function registrarTermo() { 
+            const d = new URLSearchParams(); 
+            d.append("action", "registrarTermo"); 
+            d.append("codigo", document.getElementById("reg-codigo").value); 
+            d.append("capacidad", document.getElementById("reg-capacidad").value); 
+            d.append("gas", document.getElementById("reg-gas").value); 
+            enviarGenerico(d, "¡Termo registrado!", "tab-termos"); 
+        }
+        
+        function registrarLlenado() { 
+            const d = new URLSearchParams(); 
+            d.append("action", "registrarLlenado"); 
+            d.append("codigo", document.getElementById("llenado-codigo").value); 
+            d.append("orcaInicio", document.getElementById("llenado-orca-ini").value);
+            d.append("orcaFin", document.getElementById("llenado-orca-fin").value);
+            d.append("termoInicio", document.getElementById("llenado-termo-ini").value);
+            d.append("termoFin", document.getElementById("llenado-termo-fin").value);
+            d.append("pctInicio", document.getElementById("llenado-pct-ini").value);
+            d.append("pctFin", document.getElementById("llenado-pct-fin").value);
+            d.append("cantidad", document.getElementById("llenado-cantidad").value);
+            d.append("tiempo", document.getElementById("llenado-tiempo").value);
+            d.append("operador", document.getElementById("llenado-operador").value); 
+            d.append("observaciones", document.getElementById("llenado-observaciones").value); 
+            enviarGenerico(d, "¡Proceso de llenado registrado con éxito!", "tab-llenado"); 
+        }
+        
+        function registrarTaller() { 
+            const d = new URLSearchParams(); 
+            d.append("action", "registrarTaller"); 
+            d.append("codigo", document.getElementById("taller-codigo").value); 
+            d.append("tipo", document.getElementById("taller-tipo").value); 
+            d.append("descripcion", document.getElementById("taller-descripcion").value); 
+            d.append("tiempoTomado", document.getElementById("taller-tiempo").value); 
+            d.append("estadoResolucion", document.getElementById("taller-estado").value); 
+            enviarGenerico(d, "¡Reporte guardado!", "tab-taller"); 
+        }
+
+        /* CORRECCIÓN CRÍTICA AQUÍ: Se añade obligatoriamente la variable action */
+        function registrarLogistica() { 
+            const d = new URLSearchParams(); 
+            d.append("action", "registrarLogistica"); // <--- FALTABA ESTA LÍNEA EXACTA EN TU HTML ORIGINAL
+            d.append("codigo", document.getElementById("log-codigo").value); 
+            d.append("cliente", document.getElementById("log-cliente").value); 
+            d.append("chofer", document.getElementById("log-chofer").value); 
+            enviarGenerico(d, "¡Logística de despacho guardada!", "tab-logistica"); 
+        }
         
         function registrarInspeccion() {
             const checkboxes = document.querySelectorAll('.comp-danado:checked');
@@ -411,8 +496,18 @@
             d.append("golpes", tieneGolpes);
             d.append("valvulas", reporteValvulasYComponentes);
             d.append("presion", document.getElementById("insp-presion").value);
+            d.append("inspector", localStorage.getItem("nombre") || "Anonimo");
             
-            enviarGenerico(d, "¡Inspección registrada con éxito!");
+            fetch(API_URL, { method: "POST", body: d })
+            .then(res => res.json())
+            .then(data => { 
+                if(data.estado) { 
+                    alert("¡Inspección registrada con éxito!"); 
+                    const checkboxesAll = document.querySelectorAll('.comp-danado');
+                    checkboxesAll.forEach(cb => cb.checked = false);
+                    document.getElementById("insp-presion").value = "";
+                } else alert("Error: " + data.mensaje); 
+            }).catch(err => alert("Error de red: " + err.message));
         }
 
         window.onload = function() { const n = localStorage.getItem("nombre"); const r = localStorage.getItem("rol"); if(n && r) construirDashboardPorRol(r, n); }
