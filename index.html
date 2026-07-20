@@ -108,7 +108,7 @@
             </div>
         </div>
 
-        <!-- TABUEVA: HISTORIAL Y TRAZABILIDAD REQUERIDA -->
+        <!-- TAB: HISTORIAL Y TRAZABILIDAD REQUERIDA -->
         <div id="tab-historial" class="modulo-pane">
             <div class="card" style="border-top: 4px solid var(--primary);">
                 <h3 style="margin-top:0;">Radiografía del Termo: <span id="lbl-termo-titulo" style="color:var(--primary);">-</span></h3>
@@ -138,21 +138,21 @@
                     <tbody><tr><td colspan="4">Escanee un termo primero.</td></tr></tbody>
                 </table>
 
-                <h3 style="margin-top:20px;">Historial de Daños y Taller</h3>
+                <h3 style="margin-top:20px;">Historial de Mantenimientos (Taller)</h3>
                 <table id="tabla-taller">
-                    <thead><tr><th>Fecha</th><th>Acción / Mantenimiento</th><th>Descripción Técnica</th></tr></thead>
-                    <tbody><tr><td colspan="3">Sin registros de taller.</td></tr></tbody>
+                    <thead><tr><th>Fecha</th><th>Acción</th><th>Descripción Técnica</th><th>Tiempo</th><th>Estado</th></tr></thead>
+                    <tbody><tr><td colspan="5">Sin registros de taller.</td></tr></tbody>
                 </table>
                 
                 <h3 style="margin-top:20px;">Cadena de Custodia (Últimos Movimientos)</h3>
                 <table id="tabla-custodia">
-                    <thead><tr><th>Fecha</th><th>Asignado A:</th><th>Chofer Responsable</th></tr></thead>
+                    <thead><tr><th>Fecha</th><th>Asignado A:</th><th>Responsable Logístico</th></tr></thead>
                     <tbody><tr><td colspan="3">Sin registros de ruta.</td></tr></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- DEMÁS TABS DE REGISTRO (SE MANTIENEN IGUALES) -->
+        <!-- TABS DE REGISTRO MODIFICADOS -->
         <div id="tab-termos" class="modulo-pane">
             <div class="card">
                 <h3>Registro de Termo</h3>
@@ -180,6 +180,8 @@
                 <div class="form-group"><label>Código del Termo:</label><input type="text" id="taller-codigo"></div>
                 <div class="form-group"><label>Acción:</label><select id="taller-tipo"><option>Mantenimiento Preventivo Anual</option><option>Reparación Correctiva (Fuga/Válvula)</option><option>Prueba de Vacío</option></select></div>
                 <div class="form-group"><label>Detalles del Daño/Trabajo:</label><textarea id="taller-descripcion" rows="3"></textarea></div>
+                <div class="form-group"><label>Tiempo Invertido:</label><input type="text" id="taller-tiempo" placeholder="Ej. 3 horas / 2 días"></div>
+                <div class="form-group"><label>Estado del Daño:</label><select id="taller-estado"><option>Resuelto</option><option>Pendiente</option></select></div>
                 <button style="background-color: var(--warning); color: #333;" onclick="registrarTaller()">Guardar Reporte Técnico</button>
             </div>
         </div>
@@ -209,7 +211,6 @@
     </div>
 
     <script>
-        // REEMPLAZA AQUÍ TU URL NUEVA DE APPCREATOR / GOOGLE APP SCRIPT
         const API_URL = "https://script.google.com/macros/s/AKfycbwyZ0JJo1oWUobhaNqTYgn1NuHJM2Rhh7ESIhUCX7ypfyfUH5TiLut684CGHAigWeXR/exec";
         let html5QrcodeScanner = null;
 
@@ -274,12 +275,13 @@
         }
 
         function sincronizarCodigos(valor) {
-            document.getElementById("codigo-detectado").value = valor;
-            document.getElementById("reg-codigo").value = valor;
-            document.getElementById("llenado-codigo").value = valor;
-            document.getElementById("taller-codigo").value = valor;
-            document.getElementById("log-codigo").value = valor;
-            document.getElementById("insp-codigo").value = valor;
+            const u = valor.toUpperCase();
+            document.getElementById("codigo-detectado").value = u;
+            document.getElementById("reg-codigo").value = u;
+            document.getElementById("llenado-codigo").value = u;
+            document.getElementById("taller-codigo").value = u;
+            document.getElementById("log-codigo").value = u;
+            document.getElementById("insp-codigo").value = u;
         }
 
         function cargarHistorialDesdeBoton() {
@@ -288,9 +290,8 @@
             solicitarHistorialServidor(cod);
         }
 
-        // ================= DESCARGA EL HISTORIAL COMPLETO AL INSTANTE =================
         function solicitarHistorialServidor(codigo) {
-            document.getElementById("lbl-termo-titulo").innerHTML = codigo;
+            document.getElementById("lbl-termo-titulo").innerHTML = codigo.toUpperCase();
             cambiarTab('tab-historial', document.getElementById('tab-btn-historial'));
             
             fetch(`${API_URL}?action=obtenerHistorial&codigo=${encodeURIComponent(codigo)}`)
@@ -308,16 +309,16 @@
                     else res.llenados.forEach(l => { htmlLlenados += `<tr><td>${l.fecha}</td><td>${l.presion}</td><td>${l.nivel}%</td><td>${l.operador}</td></tr>`; });
                     document.getElementById("tabla-llenados").querySelector("tbody").innerHTML = htmlLlenados;
 
-                    // Tabla Mantenimiento
+                    // Tabla Mantenimiento (Actualizada con columnas de Criofas)
                     let htmlTaller = "";
-                    if(res.mantenimientos.length === 0) htmlTaller = "<tr><td colspan='3'>Sin reportes de daños o taller.</td></tr>";
-                    else res.mantenimientos.forEach(m => { htmlTaller += `<tr><td>${m.fecha}</td><td><b>${m.tipo}</b></td><td>${m.descripcion}</td></tr>`; });
+                    if(res.mantenimientos.length === 0) htmlTaller = "<tr><td colspan='5'>Sin reportes de daños o taller.</td></tr>";
+                    else res.mantenimientos.forEach(m => { htmlTaller += `<tr><td>${m.fecha}</td><td><b>${m.tipo}</b></td><td>${m.descripcion}</td><td>${m.tiempoInvertido}</td><td>${m.estado}</td></tr>`; });
                     document.getElementById("tabla-taller").querySelector("tbody").innerHTML = htmlTaller;
 
-                    // Tabla Custodia
+                    // Tabla Custodia Corregida (Mapea correctamente las propiedades estructuradas por el backend)
                     let htmlCustodia = "";
                     if(res.cadenaCustodia.length === 0) htmlCustodia = "<tr><td colspan='3'>Sin historial logístico.</td></tr>";
-                    else res.cadenaCustodia.forEach(c => { htmlCustodia += `<tr><td>${c.fecha}</td><td>${c.cliente}</td><td>${c.chofer}</td></tr>`; });
+                    else res.cadenaCustodia.forEach(c => { htmlCustodia += `<tr><td>${c.fecha}</td><td>${c.entidad}</td><td>${c.responsable}</td></tr>`; });
                     document.getElementById("tabla-custodia").querySelector("tbody").innerHTML = htmlCustodia;
                 }
             }).catch(err => alert("Error cargando historial: " + err.message));
@@ -338,7 +339,7 @@
         
         function registrarTermo() { const d = new URLSearchParams(); d.append("action", "registrarTermo"); d.append("codigo", document.getElementById("reg-codigo").value); d.append("capacidad", document.getElementById("reg-capacidad").value); d.append("gas", document.getElementById("reg-gas").value); enviarGenerico(d, "¡Termo registrado!"); }
         function registrarLlenado() { const d = new URLSearchParams(); d.append("action", "registrarLlenado"); d.append("codigo", document.getElementById("llenado-codigo").value); d.append("presion", document.getElementById("llenado-presion").value); d.append("nivel", document.getElementById("llenado-nivel").value); d.append("operador", document.getElementById("llenado-operador").value); enviarGenerico(d, "¡Llenado registrado!"); }
-        function registrarTaller() { const d = new URLSearchParams(); d.append("action", "registrarTaller"); d.append("codigo", document.getElementById("taller-codigo").value); d.append("tipo", document.getElementById("taller-tipo").value); d.append("descripcion", document.getElementById("taller-descripcion").value); enviarGenerico(d, "¡Reporte guardado!"); }
+        function registrarTaller() { const d = new URLSearchParams(); d.append("action", "registrarTaller"); d.append("codigo", document.getElementById("taller-codigo").value); d.append("tipo", document.getElementById("taller-tipo").value); d.append("descripcion", document.getElementById("taller-descripcion").value); d.append("tiempoTomado", document.getElementById("taller-tiempo").value); d.append("estadoResolucion", document.getElementById("taller-estado").value); enviarGenerico(d, "¡Reporte guardado!"); }
         function registrarLogistica() { const d = new URLSearchParams(); d.append("action", "registrarLogistica"); d.append("codigo", document.getElementById("log-codigo").value); d.append("cliente", document.getElementById("log-cliente").value); d.append("chofer", document.getElementById("log-chofer").value); enviarGenerico(d, "¡Logística de despacho guardada!"); }
         function registrarInspeccion() { const d = new URLSearchParams(); d.append("action", "registrarInspeccion"); d.append("codigo", document.getElementById("insp-codigo").value); d.append("golpes", document.getElementById("insp-golpes").value); d.append("valvulas", document.getElementById("insp-valvulas").value); d.append("presion", document.getElementById("insp-presion").value); enviarGenerico(d, "¡Inspección registrada!"); }
 
