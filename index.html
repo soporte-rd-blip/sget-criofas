@@ -262,7 +262,7 @@
             }).catch(err => alert("Error de Login: " + err.message));
         }
 
-        // CORRECCIÓN DE ROLES: Ahora las pestañas clave siempre se visualizan
+        // CONTROL DINÁMICO DE ROLES TOTALMENTE CONFIGURADO
         function construirDashboardPorRol(rol, nombre){
             document.getElementById("pantalla-login").style.display = "none";
             document.getElementById("pantalla-dashboard").style.display = "block";
@@ -271,12 +271,29 @@
 
             const r = rol.toLowerCase().trim();
             
-            // Forzamos visibilidad total para evitar problemas de visualización por rol
-            document.getElementById("tab-btn-termos").style.display = "block";
-            document.getElementById("tab-btn-llenado").style.display = "block";
-            document.getElementById("tab-btn-taller").style.display = "block";
-            document.getElementById("tab-btn-logistica").style.display = "block";
-            document.getElementById("tab-btn-inspecciones").style.display = "block";
+            // 1. Apagamos todos los botones por seguridad inicial
+            document.getElementById("tab-btn-historial").style.display = "none";
+            document.getElementById("tab-btn-termos").style.display = "none";
+            document.getElementById("tab-btn-llenado").style.display = "none";
+            document.getElementById("tab-btn-taller").style.display = "none";
+            document.getElementById("tab-btn-logistica").style.display = "none";
+            document.getElementById("tab-btn-inspecciones").style.display = "none";
+
+            // 2. Filtramos accesos de acuerdo al Rol de la base de datos
+            if (r === "tecnico" || r === "taller" || r === "produccion") {
+                // El técnico solo opera e inspecciona. No ve reportería gerencial ni logística.
+                document.getElementById("tab-btn-llenado").style.display = "block";
+                document.getElementById("tab-btn-taller").style.display = "block";
+                document.getElementById("tab-btn-inspecciones").style.display = "block";
+            } else {
+                // Administradores, Gerentes o Supervisores tienen acceso completo.
+                document.getElementById("tab-btn-historial").style.display = "block";
+                document.getElementById("tab-btn-termos").style.display = "block";
+                document.getElementById("tab-btn-llenado").style.display = "block";
+                document.getElementById("tab-btn-taller").style.display = "block";
+                document.getElementById("tab-btn-logistica").style.display = "block";
+                document.getElementById("tab-btn-inspecciones").style.display = "block";
+            }
 
             cambiarTab('tab-inicio', document.getElementById('tab-btn-inicio'));
         }
@@ -319,7 +336,14 @@
         }
 
         function solicitarHistorialServidor(codigo) {
-            document.getElementById("lbl-termo-titulo").innerHTML = codigo.toUpperCase();
+            const rolActual = localStorage.getItem("rol") ? localStorage.getItem("rol").toLowerCase() : "";
+            // Si es un técnico básico, no le cargamos la pestaña de radiografía gerencial
+            if (rolActual === "tecnico" || rolActual === "taller") {
+                alert("Código de Termo Seleccionado: " + codigo.toUpperCase() + ". Proceda con las pestañas de Llenado, Taller o Inspección.");
+                return;
+            }
+
+            document.getElementById("lbl-termo-titulo").innerHTML = code.toUpperCase();
             cambiarTab('tab-historial', document.getElementById('tab-btn-historial'));
             
             fetch(`${API_URL}?action=obtenerHistorial&codigo=${encodeURIComponent(codigo)}`)
@@ -378,7 +402,6 @@
         function registrarTaller() { const d = new URLSearchParams(); d.append("action", "registrarTaller"); d.append("codigo", document.getElementById("taller-codigo").value); d.append("tipo", document.getElementById("taller-tipo").value); d.append("descripcion", document.getElementById("taller-descripcion").value); d.append("tiempoTomado", document.getElementById("taller-tiempo").value); d.append("estadoResolucion", document.getElementById("taller-estado").value); enviarGenerico(d, "¡Reporte guardado!"); }
         function registrarLogistica() { const d = new URLSearchParams(); d.append("action", "registrarLogistica"); d.append("codigo", document.getElementById("log-codigo").value); d.append("cliente", document.getElementById("log-cliente").value); d.append("chofer", document.getElementById("log-chofer").value); enviarGenerico(d, "¡Logística de despacho guardada!"); }
         
-        // ENVÍO INTEGRADO DE LA LISTA DE LOS 23 COMPONENTES DAÑADOS
         function registrarInspeccion() {
             const checkboxes = document.querySelectorAll('.comp-danado:checked');
             let danados = [];
