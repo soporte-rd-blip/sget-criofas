@@ -202,7 +202,7 @@
             </div>
         </div>
 
-        <!-- TAB MODIFICADO: INSPECCIÓN CON CHECKLIST DIGITALIZADO DE LA IMAGEN -->
+        <!-- TAB INSPECCIÓN -->
         <div id="tab-inspecciones" class="modulo-pane">
             <div class="card">
                 <h3>Inspección Visual de Componentes</h3>
@@ -262,7 +262,6 @@
             }).catch(err => alert("Error de Login: " + err.message));
         }
 
-        // CONTROL DINÁMICO DE ROLES TOTALMENTE CONFIGURADO
         function construirDashboardPorRol(rol, nombre){
             document.getElementById("pantalla-login").style.display = "none";
             document.getElementById("pantalla-dashboard").style.display = "block";
@@ -271,7 +270,6 @@
 
             const r = rol.toLowerCase().trim();
             
-            // 1. Apagamos todos los botones por seguridad inicial
             document.getElementById("tab-btn-historial").style.display = "none";
             document.getElementById("tab-btn-termos").style.display = "none";
             document.getElementById("tab-btn-llenado").style.display = "none";
@@ -279,14 +277,11 @@
             document.getElementById("tab-btn-logistica").style.display = "none";
             document.getElementById("tab-btn-inspecciones").style.display = "none";
 
-            // 2. Filtramos accesos de acuerdo al Rol de la base de datos
             if (r === "tecnico" || r === "taller" || r === "produccion") {
-                // El técnico solo opera e inspecciona. No ve reportería gerencial ni logística.
                 document.getElementById("tab-btn-llenado").style.display = "block";
                 document.getElementById("tab-btn-taller").style.display = "block";
                 document.getElementById("tab-btn-inspecciones").style.display = "block";
             } else {
-                // Administradores, Gerentes o Supervisores tienen acceso completo.
                 document.getElementById("tab-btn-historial").style.display = "block";
                 document.getElementById("tab-btn-termos").style.display = "block";
                 document.getElementById("tab-btn-llenado").style.display = "block";
@@ -337,13 +332,13 @@
 
         function solicitarHistorialServidor(codigo) {
             const rolActual = localStorage.getItem("rol") ? localStorage.getItem("rol").toLowerCase() : "";
-            // Si es un técnico básico, no le cargamos la pestaña de radiografía gerencial
             if (rolActual === "tecnico" || rolActual === "taller") {
                 alert("Código de Termo Seleccionado: " + codigo.toUpperCase() + ". Proceda con las pestañas de Llenado, Taller o Inspección.");
                 return;
             }
 
-            document.getElementById("lbl-termo-titulo").innerHTML = code.toUpperCase();
+            // CORREGIDO: Ahora usa 'codigo' en lugar de 'code' para evitar congelamiento
+            document.getElementById("lbl-termo-titulo").innerHTML = codigo.toUpperCase();
             cambiarTab('tab-historial', document.getElementById('tab-btn-historial'));
             
             fetch(`${API_URL}?action=obtenerHistorial&codigo=${encodeURIComponent(codigo)}`)
