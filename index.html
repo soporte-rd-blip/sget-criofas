@@ -71,14 +71,14 @@
         <div class="container">
             <h2>SGTC CRIOFAS</h2>
             <div class="form-group">
-                <label>Usuario:</label>
+                <label for="usuario">Usuario:</label>
                 <input type="text" id="usuario" placeholder="Ej. jperez">
             </div>
             <div class="form-group">
-                <label>Contraseña:</label>
+                <label for="clave">Contraseña:</label>
                 <input type="password" id="clave" placeholder="••••••••">
             </div>
-            <button onclick="login()">Ingresar al Sistema</button>
+            <button type="button" onclick="login()">Ingresar al Sistema</button>
         </div>
     </div>
 
@@ -107,14 +107,14 @@
             <div class="card" style="text-align: center;">
                 <h3>Lector de Termos</h3>
                 <p style="font-size:13px; color:#666;">Inicia la cámara para identificar el termo y descargar su reporte de vida.</p>
-                <button id="btn-control-camara" style="background-color: var(--success);" onclick="alternarEscaner()">📸 Iniciar Cámara QR</button>
+                <button type="button" id="btn-control-camara" style="background-color: var(--success);" onclick="alternarEscaner()">📸 Iniciar Cámara QR</button>
                 <div id="zona-escaneo"></div>
                 
                 <div class="form-group" style="margin-top: 20px; text-align: left;">
-                    <label>Código Seleccionado Activo:</label>
+                    <label for="codigo-detectado">Código Seleccionado Activo:</label>
                     <input type="text" id="codigo-detectado" placeholder="Escriba o escanee un código" oninput="sincronizarCodigos(this.value)">
                 </div>
-                <button style="background-color: var(--dark);" onclick="cargarHistorialDesdeBoton()">Consultar Datos de este Termo</button>
+                <button type="button" style="background-color: var(--dark);" onclick="cargarHistorialDesdeBoton()">Consultar Datos de este Termo</button>
             </div>
         </div>
 
@@ -166,54 +166,54 @@
         <div id="tab-termos" class="modulo-pane">
             <div class="card">
                 <h3>Registro de Termo</h3>
-                <div class="form-group"><label>Código Interno Termo (QR):</label><input type="text" id="reg-codigo"></div>
-                <div class="form-group"><label>Capacidad:</label><select id="reg-capacidad"><option>180 Litros</option><option>230 Litros</option><option>1000 Litros</option></select></div>
-                <div class="form-group"><label>Gas Industrial:</label><select id="reg-gas"><option>Oxígeno (O2)</option><option>Nitrógeno (N2)</option><option>Argón (Ar)</option></select></div>
-                <button onclick="registrarTermo()">Registrar Termo</button>
+                <div class="form-group"><label for="reg-codigo">Código Interno Termo (QR):</label><input type="text" id="reg-codigo"></div>
+                <div class="form-group"><label for="reg-capacidad">Capacidad:</label><select id="reg-capacidad"><option>180 Litros</option><option>230 Litros</option><option>1000 Litros</option></select></div>
+                <div class="form-group"><label for="reg-gas">Gas Industrial:</label><select id="reg-gas"><option>Oxígeno (O2)</option><option>Nitrógeno (N2)</option><option>Argón (Ar)</option></select></div>
+                <button type="button" onclick="registrarTermo()">Registrar Termo</button>
             </div>
         </div>
 
-        <!-- TAB: LLENADO (MÉTRICAS COMPLETAS Y SIN DESPLAZAMIENTOS) -->
+        <!-- TAB: LLENADO -->
         <div id="tab-llenado" class="modulo-pane">
             <div class="card">
                 <h3>Registrar Proceso de Llenado</h3>
                 
                 <div class="form-group">
-                    <label>Código del Termo:</label>
+                    <label for="llenado-codigo">Código del Termo:</label>
                     <input type="text" id="llenado-codigo" placeholder="Escanee o digite">
                 </div>
 
                 <div class="seccion-titulo">Presiones de Operación (PSI)</div>
                 <div class="fila-doble">
-                    <div class="form-group"><label>PSI ORCA Inicio:</label><input type="number" id="llenado-orca-ini"></div>
-                    <div class="form-group"><label>PSI ORCA Fin:</label><input type="number" id="llenado-orca-fin"></div>
+                    <div class="form-group"><label for="llenado-orca-ini">PSI ORCA Inicio:</label><input type="number" id="llenado-orca-ini"></div>
+                    <div class="form-group"><label for="llenado-orca-fin">PSI ORCA Fin:</label><input type="number" id="llenado-orca-fin"></div>
                 </div>
                 <div class="fila-doble">
-                    <div class="form-group"><label>PSI Termo Inicio:</label><input type="number" id="llenado-termo-ini"></div>
-                    <div class="form-group"><label>PSI Termo Fin:</label><input type="number" id="llenado-termo-fin"></div>
+                    <div class="form-group"><label for="llenado-termo-ini">PSI Termo Inicio:</label><input type="number" id="llenado-termo-ini"></div>
+                    <div class="form-group"><label for="llenado-termo-fin">PSI Termo Fin:</label><input type="number" id="llenado-termo-fin"></div>
                 </div>
 
                 <div class="seccion-titulo">Capacidad & Volumen Líquido</div>
                 <div class="fila-doble">
-                    <div class="form-group"><label>% Inicio:</label><input type="number" id="llenado-pct-ini"></div>
-                    <div class="form-group"><label>% Fin:</label><input type="number" id="llenado-pct-fin"></div>
+                    <div class="form-group"><label for="llenado-pct-ini">% Inicio:</label><input type="number" id="llenado-pct-ini"></div>
+                    <div class="form-group"><label for="llenado-pct-fin">% Fin:</label><input type="number" id="llenado-pct-fin"></div>
                 </div>
                 <div class="fila-doble">
-                    <div class="form-group"><label>Cantidad Cargada:</label><input type="number" id="llenado-cantidad" placeholder="Lts/Gals"></div>
-                    <div class="form-group"><label>Tiempo (minutos):</label><input type="number" id="llenado-tiempo" placeholder="Ej. 15"></div>
+                    <div class="form-group"><label for="llenado-cantidad">Cantidad Cargada:</label><input type="number" id="llenado-cantidad" placeholder="Lts/Gals"></div>
+                    <div class="form-group"><label for="llenado-tiempo">Tiempo (minutos):</label><input type="number" id="llenado-tiempo" placeholder="Ej. 15"></div>
                 </div>
 
                 <div class="seccion-titulo">Información de Control</div>
                 <div class="form-group">
-                    <label>Operador / Técnico Responsable:</label>
+                    <label for="llenado-operador">Operador / Técnico Responsable:</label>
                     <input type="text" id="llenado-operador">
                 </div>
                 <div class="form-group">
-                    <label>Observaciones del Proceso:</label>
+                    <label for="llenado-observaciones">Observaciones del Proceso:</label>
                     <textarea id="llenado-observaciones" rows="2" placeholder="Detalles o novedades encontradas..."></textarea>
                 </div>
 
-                <button style="background-color: var(--success);" onclick="registrarLlenado()">Confirmar Llenado</button>
+                <button type="button" style="background-color: var(--success);" onclick="registrarLlenado()">Confirmar Llenado</button>
             </div>
         </div>
 
@@ -221,12 +221,12 @@
         <div id="tab-taller" class="modulo-pane">
             <div class="card">
                 <h3>Taller & Mantenimiento</h3>
-                <div class="form-group"><label>Código del Termo:</label><input type="text" id="taller-codigo"></div>
-                <div class="form-group"><label>Acción:</label><select id="taller-tipo"><option>Mantenimiento Preventivo Anual</option><option>Reparación Correctiva (Fuga/Válvula)</option><option>Prueba de Vacío</option></select></div>
-                <div class="form-group"><label>Detalles del Daño/Trabajo:</label><textarea id="taller-descripcion" rows="3"></textarea></div>
-                <div class="form-group"><label>Tiempo Invertido:</label><input type="text" id="taller-tiempo" placeholder="Ej. 3 horas / 2 días"></div>
-                <div class="form-group"><label>Estado del Daño:</label><select id="taller-estado"><option>Resuelto</option><option>Pendiente</option></select></div>
-                <button style="background-color: var(--warning); color: #333;" onclick="registrarTaller()">Guardar Reporte Técnico</button>
+                <div class="form-group"><label for="taller-codigo">Código del Termo:</label><input type="text" id="taller-codigo"></div>
+                <div class="form-group"><label for="taller-tipo">Acción:</label><select id="taller-tipo"><option>Mantenimiento Preventivo Anual</option><option>Reparación Correctiva (Fuga/Válvula)</option><option>Prueba de Vacío</option></select></div>
+                <div class="form-group"><label for="taller-descripcion">Detalles del Daño/Trabajo:</label><textarea id="taller-descripcion" rows="3"></textarea></div>
+                <div class="form-group"><label for="taller-tiempo">Tiempo Invertido:</label><input type="text" id="taller-tiempo" placeholder="Ej. 3 horas / 2 días"></div>
+                <div class="form-group"><label for="taller-estado">Estado del Daño:</label><select id="taller-estado"><option>Resuelto</option><option>Pendiente</option></select></div>
+                <button type="button" style="background-color: var(--warning); color: #333;" onclick="registrarTaller()">Guardar Reporte Técnico</button>
             </div>
         </div>
 
@@ -234,10 +234,10 @@
         <div id="tab-logistica" class="modulo-pane">
             <div class="card">
                 <h3>Despacho / Logística</h3>
-                <div class="form-group"><label>Código del Termo:</label><input type="text" id="log-codigo"></div>
-                <div class="form-group"><label>Cliente de Destino:</label><input type="text" id="log-cliente"></div>
-                <div class="form-group"><label>Chofer Asignado:</label><input type="text" id="log-chofer"></div>
-                <button onclick="registrarLogistica()">Despachar Activo</button>
+                <div class="form-group"><label for="log-codigo">Código del Termo:</label><input type="text" id="log-codigo"></div>
+                <div class="form-group"><label for="log-cliente">Cliente de Destino:</label><input type="text" id="log-cliente"></div>
+                <div class="form-group"><label for="log-chofer">Chofer Asignado:</label><input type="text" id="log-chofer"></div>
+                <button type="button" onclick="registrarLogistica()">Despachar Activo</button>
             </div>
         </div>
 
@@ -245,10 +245,10 @@
         <div id="tab-inspecciones" class="modulo-pane">
             <div class="card">
                 <h3>Inspección Visual de Componentes</h3>
-                <div class="form-group"><label>Código del Termo:</label><input type="text" id="insp-codigo"></div>
-                <div class="form-group"><label>Presión Actual (PSI):</label><input type="number" id="insp-presion"></div>
+                <div class="form-group"><label for="insp-codigo">Código del Termo:</label><input type="text" id="insp-codigo"></div>
+                <div class="form-group"><label for="insp-presion">Presión Actual (PSI):</label><input type="number" id="insp-presion"></div>
                 
-                <label style="margin-top: 15px; margin-bottom: 8px;">MARQUE CON UNA X ÚNICAMENTE EL EQUIPO DAÑADO:</label>
+                <label style="margin-top: 15px; margin-bottom: 8px;">MARQUE UNICAMENTE EL EQUIPO DAÑADO:</label>
                 <div class="checklist-container" id="contenedor-componentes">
                     <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Válvula de gas"> 1. Válvula de gas</label>
                     <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Válvula de liquido"> 2. Válvula de liquido</label>
@@ -275,14 +275,14 @@
                     <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Manguera regulador/Manifold"> 23. Manguera regulador/Manifold</label>
                 </div>
                 
-                <button style="background-color: var(--dark);" onclick="registrarInspeccion()">Enviar Inspección</button>
+                <button type="button" style="background-color: var(--dark);" onclick="registrarInspeccion()">Enviar Inspección</button>
             </div>
         </div>
 
-        <button class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
+        <button type="button" class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
 
-    <!-- ================= JAVASCRIPT CORREGIDO Y CONTROLADO ================= -->
+    <!-- ================= JAVASCRIPT ================= -->
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbwyZ0JJo1oWUobhaNqTYgn1NuHJM2Rhh7ESIhUCX7ypfyfUH5TiLut684CGHAigWeXR/exec";
         let html5QrcodeScanner = null;
@@ -290,7 +290,7 @@
         function login(){
             const usuario = document.getElementById("usuario").value.trim();
             const clave = document.getElementById("clave").value.trim();
-            if(usuario == "" || clave == "") return alert("Complete los datos.");
+            if(usuario === "" || clave === "") return alert("Complete los datos.");
 
             const d = new URLSearchParams(); 
             d.append("action", "login"); 
@@ -298,15 +298,14 @@
             d.append("clave", clave);
 
             fetch(API_URL, { method: "POST", body: d })
-            .then(res => res.json()).then(datos => {
+            .then(res => res.json())
+            .then(datos => {
                 if(datos.estado){
                     localStorage.setItem("usuario", datos.usuario); 
                     localStorage.setItem("nombre", datos.nombre); 
                     localStorage.setItem("rol", datos.rol);
                     
-                    // Coloca de forma predeterminada el nombre del usuario cargado como operador
                     document.getElementById("llenado-operador").value = datos.nombre || datos.usuario;
-                    
                     construirDashboardPorRol(datos.rol, datos.nombre);
                 } else { alert(datos.mensaje); }
             }).catch(err => alert("Error de Login: " + err.message));
@@ -459,7 +458,6 @@
         function registrarLlenado() { 
             const d = new URLSearchParams(); 
             
-            // Garantizar que ningún campo clave falte para evitar corrimientos
             const tiempoVal = document.getElementById("llenado-tiempo").value.trim();
             const obsVal = document.getElementById("llenado-observaciones").value.trim();
             const opVal = document.getElementById("llenado-operador").value.trim() || localStorage.getItem("nombre") || "N/A";
@@ -497,21 +495,19 @@
             d.append("codigo", document.getElementById("log-codigo").value); 
             d.append("cliente", document.getElementById("log-cliente").value); 
             d.append("chofer", document.getElementById("log-chofer").value); 
-            enviarGenerico(d, "¡Logística de despacho guardada!", "tab-logistica"); 
+            enviarGenerico(d, "¡Despacho registrado correctamente!", "tab-logistica"); 
         }
-        
-        function registrarInspeccion() {
-            const checkboxes = document.querySelectorAll('#contenedor-componentes .comp-danado:checked');
-            let componentesDanados = [];
-            checkboxes.forEach(cb => componentesDanados.push(cb.value));
 
+        function registrarInspeccion() {
             const d = new URLSearchParams();
+            const marcados = Array.from(document.querySelectorAll('.comp-danado:checked')).map(c => c.value);
+            
             d.append("action", "registrarInspeccion");
             d.append("codigo", document.getElementById("insp-codigo").value);
             d.append("presion", document.getElementById("insp-presion").value);
-            d.append("componentesDanados", componentesDanados.join(", "));
+            d.append("componentesDanados", marcados.join(", "));
             
-            enviarGenerico(d, "¡Inspección técnica registrada!", "tab-inspecciones");
+            enviarGenerico(d, "¡Inspección guardada!", "tab-inspecciones");
         }
     </script>
 </body>
