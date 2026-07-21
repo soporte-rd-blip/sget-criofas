@@ -287,6 +287,16 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbwyZ0JJo1oWUobhaNqTYgn1NuHJM2Rhh7ESIhUCX7ypfyfUH5TiLut684CGHAigWeXR/exec";
         let html5QrcodeScanner = null;
 
+        // Comprobación de sesión al cargar página
+        document.addEventListener("DOMContentLoaded", () => {
+            const rolGuardado = localStorage.getItem("rol");
+            const nombreGuardado = localStorage.getItem("nombre");
+            if (rolGuardado && nombreGuardado) {
+                document.getElementById("llenado-operador").value = nombreGuardado;
+                construirDashboardPorRol(rolGuardado, nombreGuardado);
+            }
+        });
+
         function login(){
             const usuario = document.getElementById("usuario").value.trim();
             const clave = document.getElementById("clave").value.trim();
@@ -361,7 +371,15 @@
             const zona = document.getElementById("zona-escaneo"); 
             const btn = document.getElementById("btn-control-camara");
             if (html5QrcodeScanner) {
-                html5QrcodeScanner.stop().then(() => { html5QrcodeScanner = null; zona.style.display = "none"; btn.innerHTML = "📸 Iniciar Cámara QR"; btn.style.backgroundColor = "var(--success)"; }).catch(() => { html5QrcodeScanner = null; zona.style.display = "none"; });
+                html5QrcodeScanner.stop().then(() => { 
+                    html5QrcodeScanner = null; 
+                    zona.style.display = "none"; 
+                    btn.innerHTML = "📸 Iniciar Cámara QR"; 
+                    btn.style.backgroundColor = "var(--success)"; 
+                }).catch(() => { 
+                    html5QrcodeScanner = null; 
+                    zona.style.display = "none"; 
+                });
             }
         }
 
@@ -395,23 +413,23 @@
             .then(res => res.json())
             .then(res => {
                 if(res.estado) {
-                    document.getElementById("h-cliente-anterior").innerHTML = res.clienteAnterior;
-                    document.getElementById("h-cliente-actual").innerHTML = res.clienteActual;
-                    document.getElementById("h-total-llenados").innerHTML = res.totalLlenados + " veces";
-                    document.getElementById("h-ultimo-llenado").innerHTML = res.ultimoLlenado;
+                    document.getElementById("h-cliente-anterior").innerHTML = res.clienteAnterior || 'N/A';
+                    document.getElementById("h-cliente-actual").innerHTML = res.clienteActual || 'N/A';
+                    document.getElementById("h-total-llenados").innerHTML = (res.totalLlenados || 0) + " veces";
+                    document.getElementById("h-ultimo-llenado").innerHTML = res.ultimoLlenado || 'N/A';
                     
                     let htmlLlenados = "";
-                    if(res.llenados.length === 0) htmlLlenados = "<tr><td colspan='4'>Sin cargas históricas.</td></tr>";
+                    if(!res.llenados || res.llenados.length === 0) htmlLlenados = "<tr><td colspan='4'>Sin cargas históricas.</td></tr>";
                     else res.llenados.forEach(l => { htmlLlenados += `<tr><td>${l.fecha}</td><td>${l.presion}</td><td>${l.nivel}%</td><td>${l.operador}</td></tr>`; });
                     document.getElementById("tabla-llenados").querySelector("tbody").innerHTML = htmlLlenados;
 
                     let htmlTaller = "";
-                    if(res.mantenimientos.length === 0) htmlTaller = "<tr><td colspan='5'>Sin reportes de daños o taller.</td></tr>";
+                    if(!res.mantenimientos || res.mantenimientos.length === 0) htmlTaller = "<tr><td colspan='5'>Sin reportes de daños o taller.</td></tr>";
                     else res.mantenimientos.forEach(m => { htmlTaller += `<tr><td>${m.fecha}</td><td><b>${m.tipo}</b></td><td>${m.descripcion}</td><td>${m.tiempoInvertido}</td><td>${m.estado}</td></tr>`; });
                     document.getElementById("tabla-taller").querySelector("tbody").innerHTML = htmlTaller;
 
                     let htmlCustodia = "";
-                    if(res.cadenaCustodia.length === 0) htmlCustodia = "<tr><td colspan='3'>Sin historial logístico.</td></tr>";
+                    if(!res.cadenaCustodia || res.cadenaCustodia.length === 0) htmlCustodia = "<tr><td colspan='3'>Sin historial logístico.</td></tr>";
                     else res.cadenaCustodia.forEach(c => { htmlCustodia += `<tr><td>${c.fecha}</td><td>${c.entidad}</td><td>${c.responsable}</td></tr>`; });
                     document.getElementById("tabla-custodia").querySelector("tbody").innerHTML = htmlCustodia;
                 }
@@ -428,7 +446,12 @@
             if (idTab !== 'tab-inicio') detenerEscanerEfectivo();
         }
 
-        function cerrarSesion(){ detenerEscanerEfectivo(); localStorage.clear(); document.getElementById("pantalla-dashboard").style.display = "none"; document.getElementById("pantalla-login").style.display = "flex"; }
+        function cerrarSesion(){ 
+            detenerEscanerEfectivo(); 
+            localStorage.clear(); 
+            document.getElementById("pantalla-dashboard").style.display = "none"; 
+            document.getElementById("pantalla-login").style.display = "flex"; 
+        }
         
         function enviarGenerico(dataForm, successMsg, idTabLimpieza) { 
             fetch(API_URL, { method: "POST", body: dataForm })
@@ -482,20 +505,20 @@
             const d = new URLSearchParams(); 
             d.append("action", "registrarTaller"); 
             d.append("codigo", document.getElementById("taller-codigo").value); 
-            d.append("tipo", document.getElementById("taller-tipo").value); 
-            d.append("descripcion", document.getElementById("taller-descripcion").value); 
-            d.append("tiempoTomado", document.getElementById("taller-tiempo").value); 
-            d.append("estadoResolucion", document.getElementById("taller-estado").value); 
-            enviarGenerico(d, "¡Reporte guardado!", "tab-taller"); 
+            d.append("tipo", document.getElementById("taller-tipo").value);
+            d.append("descripcion", document.getElementById("taller-descripcion").value);
+            d.append("tiempo", document.getElementById("taller-tiempo").value);
+            d.append("estado", document.getElementById("taller-estado").value);
+            enviarGenerico(d, "¡Reporte técnico de taller guardado!", "tab-taller");
         }
 
-        function registrarLogistica() { 
-            const d = new URLSearchParams(); 
-            d.append("action", "registrarLogistica"); 
-            d.append("codigo", document.getElementById("log-codigo").value); 
-            d.append("cliente", document.getElementById("log-cliente").value); 
-            d.append("chofer", document.getElementById("log-chofer").value); 
-            enviarGenerico(d, "¡Despacho registrado correctamente!", "tab-logistica"); 
+        function registrarLogistica() {
+            const d = new URLSearchParams();
+            d.append("action", "registrarLogistica");
+            d.append("codigo", document.getElementById("log-codigo").value);
+            d.append("cliente", document.getElementById("log-cliente").value);
+            d.append("chofer", document.getElementById("log-chofer").value);
+            enviarGenerico(d, "¡Despacho registrado correctamente!", "tab-logistica");
         }
 
         function registrarInspeccion() {
@@ -505,9 +528,8 @@
             d.append("action", "registrarInspeccion");
             d.append("codigo", document.getElementById("insp-codigo").value);
             d.append("presion", document.getElementById("insp-presion").value);
-            d.append("componentesDanados", marcados.join(", "));
-            
-            enviarGenerico(d, "¡Inspección guardada!", "tab-inspecciones");
+            d.append("danos", marcados.join(", "));
+            enviarGenerico(d, "¡Inspección técnica enviada!", "tab-inspecciones");
         }
     </script>
 </body>
