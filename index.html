@@ -173,7 +173,7 @@
             </div>
         </div>
 
-        <!-- TAB: LLENADO (CON TODAS LAS NUEVAS MÉTRICAS) -->
+        <!-- TAB: LLENADO (MÉTRICAS COMPLETAS Y SIN DESPLAZAMIENTOS) -->
         <div id="tab-llenado" class="modulo-pane">
             <div class="card">
                 <h3>Registrar Proceso de Llenado</h3>
@@ -292,11 +292,21 @@
             const clave = document.getElementById("clave").value.trim();
             if(usuario == "" || clave == "") return alert("Complete los datos.");
 
-            const d = new URLSearchParams(); d.append("action", "login"); d.append("usuario", usuario); d.append("clave", clave);
+            const d = new URLSearchParams(); 
+            d.append("action", "login"); 
+            d.append("usuario", usuario); 
+            d.append("clave", clave);
+
             fetch(API_URL, { method: "POST", body: d })
             .then(res => res.json()).then(datos => {
                 if(datos.estado){
-                    localStorage.setItem("usuario", datos.usuario); localStorage.setItem("nombre", datos.nombre); localStorage.setItem("rol", datos.rol);
+                    localStorage.setItem("usuario", datos.usuario); 
+                    localStorage.setItem("nombre", datos.nombre); 
+                    localStorage.setItem("rol", datos.rol);
+                    
+                    // Coloca de forma predeterminada el nombre del usuario cargado como operador
+                    document.getElementById("llenado-operador").value = datos.nombre || datos.usuario;
+                    
                     construirDashboardPorRol(datos.rol, datos.nombre);
                 } else { alert(datos.mensaje); }
             }).catch(err => alert("Error de Login: " + err.message));
@@ -334,7 +344,8 @@
         }
 
         function alternarEscaner() {
-            const zona = document.getElementById("zona-escaneo"); const btn = document.getElementById("btn-control-camara");
+            const zona = document.getElementById("zona-escaneo"); 
+            const btn = document.getElementById("btn-control-camara");
             if (html5QrcodeScanner === null) {
                 zona.style.display = "block"; btn.innerHTML = "🛑 Detener Cámara"; btn.style.backgroundColor = "var(--danger)";
                 html5QrcodeScanner = new Html5Qrcode("zona-escaneo");
@@ -348,7 +359,8 @@
         }
 
         function detenerEscanerEfectivo() {
-            const zona = document.getElementById("zona-escaneo"); const btn = document.getElementById("btn-control-camara");
+            const zona = document.getElementById("zona-escaneo"); 
+            const btn = document.getElementById("btn-control-camara");
             if (html5QrcodeScanner) {
                 html5QrcodeScanner.stop().then(() => { html5QrcodeScanner = null; zona.style.display = "none"; btn.innerHTML = "📸 Iniciar Cámara QR"; btn.style.backgroundColor = "var(--success)"; }).catch(() => { html5QrcodeScanner = null; zona.style.display = "none"; });
             }
@@ -446,6 +458,12 @@
         
         function registrarLlenado() { 
             const d = new URLSearchParams(); 
+            
+            // Garantizar que ningún campo clave falte para evitar corrimientos
+            const tiempoVal = document.getElementById("llenado-tiempo").value.trim();
+            const obsVal = document.getElementById("llenado-observaciones").value.trim();
+            const opVal = document.getElementById("llenado-operador").value.trim() || localStorage.getItem("nombre") || "N/A";
+
             d.append("action", "registrarLlenado"); 
             d.append("codigo", document.getElementById("llenado-codigo").value); 
             d.append("orcaInicio", document.getElementById("llenado-orca-ini").value);
@@ -455,9 +473,10 @@
             d.append("pctInicio", document.getElementById("llenado-pct-ini").value);
             d.append("pctFin", document.getElementById("llenado-pct-fin").value);
             d.append("cantidad", document.getElementById("llenado-cantidad").value);
-            d.append("tiempo", document.getElementById("llenado-tiempo").value);
-            d.append("operador", document.getElementById("llenado-operador").value); 
-            d.append("observaciones", document.getElementById("llenado-observaciones").value); 
+            d.append("tiempo", tiempoVal); 
+            d.append("operador", opVal); 
+            d.append("observaciones", obsVal); 
+            
             enviarGenerico(d, "¡Proceso de llenado registrado con éxito!", "tab-llenado"); 
         }
         
@@ -472,10 +491,9 @@
             enviarGenerico(d, "¡Reporte guardado!", "tab-taller"); 
         }
 
-        /* CORRECCIÓN CRÍTICA AQUÍ: Se añade obligatoriamente la variable action */
         function registrarLogistica() { 
             const d = new URLSearchParams(); 
-            d.append("action", "registrarLogistica"); // <--- FALTABA ESTA LÍNEA EXACTA EN TU HTML ORIGINAL
+            d.append("action", "registrarLogistica"); 
             d.append("codigo", document.getElementById("log-codigo").value); 
             d.append("cliente", document.getElementById("log-cliente").value); 
             d.append("chofer", document.getElementById("log-chofer").value); 
@@ -483,34 +501,18 @@
         }
         
         function registrarInspeccion() {
-            const checkboxes = document.querySelectorAll('.comp-danado:checked');
-            let danados = [];
-            checkboxes.forEach(cb => danados.push(cb.value));
-            
-            const tieneGolpes = danados.includes("Cuerpo termo") ? "Sí" : "No";
-            const reporteValvulasYComponentes = danados.length > 0 ? "Daños en: " + danados.join(', ') : "Ninguno (Operativo)";
+            const checkboxes = document.querySelectorAll('#contenedor-componentes .comp-danado:checked');
+            let componentesDanados = [];
+            checkboxes.forEach(cb => componentesDanados.push(cb.value));
 
             const d = new URLSearchParams();
             d.append("action", "registrarInspeccion");
             d.append("codigo", document.getElementById("insp-codigo").value);
-            d.append("golpes", tieneGolpes);
-            d.append("valvulas", reporteValvulasYComponentes);
             d.append("presion", document.getElementById("insp-presion").value);
-            d.append("inspector", localStorage.getItem("nombre") || "Anonimo");
+            d.append("componentesDanados", componentesDanados.join(", "));
             
-            fetch(API_URL, { method: "POST", body: d })
-            .then(res => res.json())
-            .then(data => { 
-                if(data.estado) { 
-                    alert("¡Inspección registrada con éxito!"); 
-                    const checkboxesAll = document.querySelectorAll('.comp-danado');
-                    checkboxesAll.forEach(cb => cb.checked = false);
-                    document.getElementById("insp-presion").value = "";
-                } else alert("Error: " + data.mensaje); 
-            }).catch(err => alert("Error de red: " + err.message));
+            enviarGenerico(d, "¡Inspección técnica registrada!", "tab-inspecciones");
         }
-
-        window.onload = function() { const n = localStorage.getItem("nombre"); const r = localStorage.getItem("rol"); if(n && r) construirDashboardPorRol(r, n); }
     </script>
 </body>
 </html>
