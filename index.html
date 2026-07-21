@@ -508,93 +508,94 @@
         }
         
         // REGISTRO DE TERMOS NUEVOS
-        function registrarTermo() { 
+        function registrarTermo() {
             const codigo = document.getElementById("reg-codigo").value.trim();
             const serie = document.getElementById("reg-serie").value.trim();
             const capacidad = document.getElementById("reg-capacidad").value;
             const gas = document.getElementById("reg-gas").value;
-            const observaciones = document.getElementById("reg-observaciones").value.trim();
+            const obs = document.getElementById("reg-observaciones").value.trim();
 
-            if(!codigo) return alert("Ingrese el código del termo.");
+            if (!codigo || !serie) return alert("Código y Serie son requeridos.");
 
-            const d = new URLSearchParams(); 
-            d.append("action", "registrarTermo"); 
-            d.append("codigo", codigo); 
-            d.append("serie", serie); 
-            d.append("capacidad", capacidad); 
-            d.append("gas", gas); 
-            d.append("observaciones", observaciones); 
+            const d = new URLSearchParams();
+            d.append("action", "registrarTermo");
+            d.append("codigo", codigo);
+            d.append("serie", serie);
+            d.append("capacidad", capacidad);
+            d.append("gas", gas);
+            d.append("observaciones", obs);
 
-            enviarGenerico(d, "¡Termo registrado con éxito!", "tab-termos"); 
+            enviarGenerico(d, "Termo registrado exitosamente.", "tab-termos");
         }
-        
-        // REGISTRO DE LLENADO
-        function registrarLlenado() { 
-            const codigo = document.getElementById("llenado-codigo").value.trim();
-            if(!codigo) return alert("Ingrese el código del termo.");
 
-            const d = new URLSearchParams(); 
-            d.append("action", "registrarLlenado"); 
-            d.append("codigo", codigo); 
-            d.append("orcaInicio", document.getElementById("llenado-orca-ini").value);
+        // REGISTRO DE LLENADO
+        function registrarLlenado() {
+            const codigo = document.getElementById("llenado-codigo").value.trim();
+            if (!codigo) return alert("Ingrese el código del termo.");
+
+            const d = new URLSearchParams();
+            d.append("action", "registrarLlenado");
+            d.append("codigo", codigo);
+            d.append("orcaIni", document.getElementById("llenado-orca-ini").value);
             d.append("orcaFin", document.getElementById("llenado-orca-fin").value);
-            d.append("termoInicio", document.getElementById("llenado-termo-ini").value);
+            d.append("termoIni", document.getElementById("llenado-termo-ini").value);
             d.append("termoFin", document.getElementById("llenado-termo-fin").value);
-            d.append("pctInicio", document.getElementById("llenado-pct-ini").value);
+            d.append("pctIni", document.getElementById("llenado-pct-ini").value);
             d.append("pctFin", document.getElementById("llenado-pct-fin").value);
             d.append("cantidad", document.getElementById("llenado-cantidad").value);
-            d.append("tiempo", document.getElementById("llenado-tiempo").value.trim());
-            d.append("operador", document.getElementById("llenado-operador").value.trim() || localStorage.getItem("nombre") || "N/A");
-            d.append("observaciones", document.getElementById("llenado-observaciones").value.trim());
+            d.append("tiempo", document.getElementById("llenado-tiempo").value);
+            d.append("operador", document.getElementById("llenado-operador").value);
+            d.append("observaciones", document.getElementById("llenado-observaciones").value);
 
-            enviarGenerico(d, "¡Llenado registrado correctamente!", "tab-llenado");
+            enviarGenerico(d, "Llenado registrado correctamente.", "tab-llenado");
         }
 
-        // REGISTRO DE TALLER
+        // REGISTRO DE TALLER / MANTENIMIENTO
         function registrarTaller() {
             const codigo = document.getElementById("taller-codigo").value.trim();
-            if(!codigo) return alert("Ingrese el código del termo.");
+            if (!codigo) return alert("Ingrese el código del termo.");
 
             const d = new URLSearchParams();
             d.append("action", "registrarTaller");
             d.append("codigo", codigo);
             d.append("tipo", document.getElementById("taller-tipo").value);
-            d.append("descripcion", document.getElementById("taller-descripcion").value.trim());
-            d.append("tiempo", document.getElementById("taller-tiempo").value.trim());
+            d.append("descripcion", document.getElementById("taller-descripcion").value);
+            d.append("tiempo", document.getElementById("taller-tiempo").value);
             d.append("estado", document.getElementById("taller-estado").value);
 
-            enviarGenerico(d, "¡Mantenimiento de taller registrado!", "tab-taller");
+            enviarGenerico(d, "Reporte técnico guardado con éxito.", "tab-taller");
         }
 
-        // REGISTRO DE LOGÍSTICA
+        // REGISTRO DE LOGÍSTICA / DESPACHO
         function registrarLogistica() {
             const codigo = document.getElementById("log-codigo").value.trim();
-            if(!codigo) return alert("Ingrese el código del termo.");
+            const cliente = document.getElementById("log-cliente").value.trim();
+            if (!codigo || !cliente) return alert("Código y Cliente son requeridos.");
 
             const d = new URLSearchParams();
             d.append("action", "registrarLogistica");
             d.append("codigo", codigo);
-            d.append("cliente", document.getElementById("log-cliente").value.trim());
-            d.append("chofer", document.getElementById("log-chofer").value.trim());
+            d.append("cliente", cliente);
+            d.append("chofer", document.getElementById("log-chofer").value);
 
-            enviarGenerico(d, "¡Despacho registrado en logística!", "tab-logistica");
+            enviarGenerico(d, "Despacho asignado con éxito.", "tab-logistica");
         }
 
-        // REGISTRO DE INSPECCIÓN
+        // REGISTRO DE INSPECCIÓN VISUAL
         function registrarInspeccion() {
             const codigo = document.getElementById("insp-codigo").value.trim();
-            if(!codigo) return alert("Ingrese el código del termo.");
+            if (!codigo) return alert("Ingrese el código del termo.");
 
-            const seleccionados = [];
-            document.querySelectorAll(".comp-danado:checked").forEach(cb => seleccionados.push(cb.value));
+            const checkboxes = document.querySelectorAll("#contenedor-componentes .comp-danado:checked");
+            const danados = Array.from(checkboxes).map(c => c.value);
 
             const d = new URLSearchParams();
             d.append("action", "registrarInspeccion");
             d.append("codigo", codigo);
             d.append("presion", document.getElementById("insp-presion").value);
-            d.append("danos", seleccionados.join(", "));
+            d.append("danos", danados.join(", "));
 
-            enviarGenerico(d, "¡Inspección enviada correctamente!", "tab-inspecciones");
+            enviarGenerico(d, "Inspección registrada con éxito.", "tab-inspecciones");
         }
     </script>
 </body>
