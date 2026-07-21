@@ -165,11 +165,36 @@
         <!-- TAB: TERMOS -->
         <div id="tab-termos" class="modulo-pane">
             <div class="card">
-                <h3>Registro de Termo</h3>
-                <div class="form-group"><label for="reg-codigo">Código Interno Termo (QR):</label><input type="text" id="reg-codigo"></div>
-                <div class="form-group"><label for="reg-capacidad">Capacidad:</label><select id="reg-capacidad"><option>180 Litros</option><option>230 Litros</option><option>1000 Litros</option></select></div>
-                <div class="form-group"><label for="reg-gas">Gas Industrial:</label><select id="reg-gas"><option>Oxígeno (O2)</option><option>Nitrógeno (N2)</option><option>Argón (Ar)</option></select></div>
-                <button type="button" onclick="registrarTermo()">Registrar Termo</button>
+                <h3>Registro de Termo Nuevo</h3>
+                <div class="form-group">
+                    <label for="reg-codigo">Código Interno Termo (QR):</label>
+                    <input type="text" id="reg-codigo" placeholder="Ej. T-001">
+                </div>
+                <div class="form-group">
+                    <label for="reg-serie">Número de Serie (Fábrica):</label>
+                    <input type="text" id="reg-serie" placeholder="Ej. SN-987654">
+                </div>
+                <div class="form-group">
+                    <label for="reg-capacidad">Capacidad:</label>
+                    <select id="reg-capacidad">
+                        <option value="180 Litros">180 Litros</option>
+                        <option value="230 Litros">230 Litros</option>
+                        <option value="1000 Litros">1000 Litros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reg-gas">Producto (Gas):</label>
+                    <select id="reg-gas">
+                        <option value="Oxígeno (O2)">Oxígeno (O2)</option>
+                        <option value="Nitrógeno (N2)">Nitrógeno (N2)</option>
+                        <option value="Argón (Ar)">Argón (Ar)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reg-observaciones">Observaciones Iniciales:</label>
+                    <textarea id="reg-observaciones" rows="2" placeholder="Estado del termo al ingresar..."></textarea>
+                </div>
+                <button type="button" onclick="registrarTermo()">Registrar Termo en Sistema</button>
             </div>
         </div>
 
@@ -222,10 +247,23 @@
             <div class="card">
                 <h3>Taller & Mantenimiento</h3>
                 <div class="form-group"><label for="taller-codigo">Código del Termo:</label><input type="text" id="taller-codigo"></div>
-                <div class="form-group"><label for="taller-tipo">Acción:</label><select id="taller-tipo"><option>Mantenimiento Preventivo Anual</option><option>Reparación Correctiva (Fuga/Válvula)</option><option>Prueba de Vacío</option></select></div>
+                <div class="form-group">
+                    <label for="taller-tipo">Acción:</label>
+                    <select id="taller-tipo">
+                        <option>Mantenimiento Preventivo Anual</option>
+                        <option>Reparación Correctiva (Fuga/Válvula)</option>
+                        <option>Prueba de Vacío</option>
+                    </select>
+                </div>
                 <div class="form-group"><label for="taller-descripcion">Detalles del Daño/Trabajo:</label><textarea id="taller-descripcion" rows="3"></textarea></div>
                 <div class="form-group"><label for="taller-tiempo">Tiempo Invertido:</label><input type="text" id="taller-tiempo" placeholder="Ej. 3 horas / 2 días"></div>
-                <div class="form-group"><label for="taller-estado">Estado del Daño:</label><select id="taller-estado"><option>Resuelto</option><option>Pendiente</option></select></div>
+                <div class="form-group">
+                    <label for="taller-estado">Estado del Daño:</label>
+                    <select id="taller-estado">
+                        <option>Resuelto</option>
+                        <option>Pendiente</option>
+                    </select>
+                </div>
                 <button type="button" style="background-color: var(--warning); color: #333;" onclick="registrarTaller()">Guardar Reporte Técnico</button>
             </div>
         </div>
@@ -469,24 +507,35 @@
             }).catch(err => alert("Error de red: " + err.message)); 
         }
         
+        // REGISTRO DE TERMOS NUEVOS
         function registrarTermo() { 
+            const codigo = document.getElementById("reg-codigo").value.trim();
+            const serie = document.getElementById("reg-serie").value.trim();
+            const capacidad = document.getElementById("reg-capacidad").value;
+            const gas = document.getElementById("reg-gas").value;
+            const observaciones = document.getElementById("reg-observaciones").value.trim();
+
+            if(!codigo) return alert("Ingrese el código del termo.");
+
             const d = new URLSearchParams(); 
             d.append("action", "registrarTermo"); 
-            d.append("codigo", document.getElementById("reg-codigo").value); 
-            d.append("capacidad", document.getElementById("reg-capacidad").value); 
-            d.append("gas", document.getElementById("reg-gas").value); 
-            enviarGenerico(d, "¡Termo registrado!", "tab-termos"); 
+            d.append("codigo", codigo); 
+            d.append("serie", serie); 
+            d.append("capacidad", capacidad); 
+            d.append("gas", gas); 
+            d.append("observaciones", observaciones); 
+
+            enviarGenerico(d, "¡Termo registrado con éxito!", "tab-termos"); 
         }
         
+        // REGISTRO DE LLENADO
         function registrarLlenado() { 
-            const d = new URLSearchParams(); 
-            
-            const tiempoVal = document.getElementById("llenado-tiempo").value.trim();
-            const obsVal = document.getElementById("llenado-observaciones").value.trim();
-            const opVal = document.getElementById("llenado-operador").value.trim() || localStorage.getItem("nombre") || "N/A";
+            const codigo = document.getElementById("llenado-codigo").value.trim();
+            if(!codigo) return alert("Ingrese el código del termo.");
 
+            const d = new URLSearchParams(); 
             d.append("action", "registrarLlenado"); 
-            d.append("codigo", document.getElementById("llenado-codigo").value); 
+            d.append("codigo", codigo); 
             d.append("orcaInicio", document.getElementById("llenado-orca-ini").value);
             d.append("orcaFin", document.getElementById("llenado-orca-fin").value);
             d.append("termoInicio", document.getElementById("llenado-termo-ini").value);
@@ -494,42 +543,58 @@
             d.append("pctInicio", document.getElementById("llenado-pct-ini").value);
             d.append("pctFin", document.getElementById("llenado-pct-fin").value);
             d.append("cantidad", document.getElementById("llenado-cantidad").value);
-            d.append("tiempo", tiempoVal); 
-            d.append("operador", opVal); 
-            d.append("observaciones", obsVal); 
-            
-            enviarGenerico(d, "¡Proceso de llenado registrado con éxito!", "tab-llenado"); 
-        }
-        
-        function registrarTaller() { 
-            const d = new URLSearchParams(); 
-            d.append("action", "registrarTaller"); 
-            d.append("codigo", document.getElementById("taller-codigo").value); 
-            d.append("tipo", document.getElementById("taller-tipo").value);
-            d.append("descripcion", document.getElementById("taller-descripcion").value);
-            d.append("tiempo", document.getElementById("taller-tiempo").value);
-            d.append("estado", document.getElementById("taller-estado").value);
-            enviarGenerico(d, "¡Reporte técnico de taller guardado!", "tab-taller");
+            d.append("tiempo", document.getElementById("llenado-tiempo").value.trim());
+            d.append("operador", document.getElementById("llenado-operador").value.trim() || localStorage.getItem("nombre") || "N/A");
+            d.append("observaciones", document.getElementById("llenado-observaciones").value.trim());
+
+            enviarGenerico(d, "¡Llenado registrado correctamente!", "tab-llenado");
         }
 
+        // REGISTRO DE TALLER
+        function registrarTaller() {
+            const codigo = document.getElementById("taller-codigo").value.trim();
+            if(!codigo) return alert("Ingrese el código del termo.");
+
+            const d = new URLSearchParams();
+            d.append("action", "registrarTaller");
+            d.append("codigo", codigo);
+            d.append("tipo", document.getElementById("taller-tipo").value);
+            d.append("descripcion", document.getElementById("taller-descripcion").value.trim());
+            d.append("tiempo", document.getElementById("taller-tiempo").value.trim());
+            d.append("estado", document.getElementById("taller-estado").value);
+
+            enviarGenerico(d, "¡Mantenimiento de taller registrado!", "tab-taller");
+        }
+
+        // REGISTRO DE LOGÍSTICA
         function registrarLogistica() {
+            const codigo = document.getElementById("log-codigo").value.trim();
+            if(!codigo) return alert("Ingrese el código del termo.");
+
             const d = new URLSearchParams();
             d.append("action", "registrarLogistica");
-            d.append("codigo", document.getElementById("log-codigo").value);
-            d.append("cliente", document.getElementById("log-cliente").value);
-            d.append("chofer", document.getElementById("log-chofer").value);
-            enviarGenerico(d, "¡Despacho registrado correctamente!", "tab-logistica");
+            d.append("codigo", codigo);
+            d.append("cliente", document.getElementById("log-cliente").value.trim());
+            d.append("chofer", document.getElementById("log-chofer").value.trim());
+
+            enviarGenerico(d, "¡Despacho registrado en logística!", "tab-logistica");
         }
 
+        // REGISTRO DE INSPECCIÓN
         function registrarInspeccion() {
+            const codigo = document.getElementById("insp-codigo").value.trim();
+            if(!codigo) return alert("Ingrese el código del termo.");
+
+            const seleccionados = [];
+            document.querySelectorAll(".comp-danado:checked").forEach(cb => seleccionados.push(cb.value));
+
             const d = new URLSearchParams();
-            const marcados = Array.from(document.querySelectorAll('.comp-danado:checked')).map(c => c.value);
-            
             d.append("action", "registrarInspeccion");
-            d.append("codigo", document.getElementById("insp-codigo").value);
+            d.append("codigo", codigo);
             d.append("presion", document.getElementById("insp-presion").value);
-            d.append("danos", marcados.join(", "));
-            enviarGenerico(d, "¡Inspección técnica enviada!", "tab-inspecciones");
+            d.append("danos", seleccionados.join(", "));
+
+            enviarGenerico(d, "¡Inspección enviada correctamente!", "tab-inspecciones");
         }
     </script>
 </body>
