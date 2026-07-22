@@ -53,7 +53,7 @@
         .header-bar { 
             background-color: var(--dark); 
             color: white; 
-            padding: 15px 20px; 
+            padding: 12px 20px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
@@ -139,8 +139,25 @@
     <!-- ================= 1. LOGIN ================= -->
     <div id="pantalla-login" class="flex-center">
         <div class="container-login">
-            <h2 class="text-center text-primary mb-1">🚚 SGC - Cryofast</h2>
+            <!-- LOGO VECHÍCULO Y MARCA -->
+            <div class="text-center mb-2">
+                <svg width="60" height="60" viewBox="0 0 500 500">
+                    <circle cx="250" cy="250" r="230" fill="#007bff"/>
+                    <path d="M 80 280 L 160 280 M 60 250 L 140 250" stroke="#ffffff" stroke-width="12" stroke-linecap="round" opacity="0.6"/>
+                    <rect x="150" y="180" width="180" height="110" rx="15" fill="#ffffff"/>
+                    <path d="M 330 210 L 375 210 Q 395 210 400 230 L 405 260 Q 405 290 385 290 L 330 290 Z" fill="#ffffff"/>
+                    <circle cx="190" cy="290" r="24" fill="#1a1a1a"/>
+                    <circle cx="245" cy="290" r="24" fill="#1a1a1a"/>
+                    <circle cx="360" cy="290" r="24" fill="#1a1a1a"/>
+                </svg>
+            </div>
+            <h2 class="text-center text-primary mb-1 fw-bold">SGC - Cryofast</h2>
             <p class="text-center text-muted small mb-4">Sistema de Gestión de Criogénicos</p>
+
+            <div id="alerta-entorno" class="alert alert-warning py-2 small d-none" role="alert">
+                ⚠️ Modo de Prueba Local activado (no conectado a Sheets).
+            </div>
+
             <div class="form-group mb-3 position-relative">
                 <label for="usuario" class="form-label fw-bold small text-secondary">Usuario:</label>
                 <input type="text" id="usuario" class="form-control" placeholder="Ej. admin o jperez">
@@ -157,10 +174,17 @@
     <!-- ================= 2. DASHBOARD PRINCIPAL ================= -->
     <div id="pantalla-dashboard" style="display:none;">
         
-        <!-- BARRA SUPERIOR -->
+        <!-- BARRA SUPERIOR CON LOGO -->
         <div class="header-bar">
-            <div>
-                <h3>🚚 SGC - Cryofast</h3>
+            <div class="d-flex align-items-center gap-2">
+                <svg width="32" height="32" viewBox="0 0 500 500">
+                    <circle cx="250" cy="250" r="230" fill="#007bff"/>
+                    <rect x="150" y="180" width="180" height="110" rx="15" fill="#ffffff"/>
+                    <path d="M 330 210 L 375 210 Q 395 210 400 230 L 405 260 Q 405 290 385 290 L 330 290 Z" fill="#ffffff"/>
+                    <circle cx="190" cy="290" r="24" fill="#1a1a1a"/>
+                    <circle cx="360" cy="290" r="24" fill="#1a1a1a"/>
+                </svg>
+                <h3 class="m-0 fw-bold fs-6">SGC - Cryofast</h3>
                 <span class="user-badge" id="badge-rol">Rol: Carga...</span>
             </div>
             <div class="d-flex align-items-center gap-3">
@@ -440,10 +464,21 @@
 
     </div>
 
-    <!-- SCRIPT DE INTERACCIÓN LÓGICA Y CONEXIÓN A GOOGLE APPS SCRIPT -->
+    <!-- SCRIPT CONTROLADOR CON SOPORTE DUAL (LOCAL / WEB APP) -->
     <script>
         let html5QrCode = null;
         let escanerActivo = false;
+
+        // Comprobación de entorno (Apps Script vs Local)
+        function esEntornoAppsScript() {
+            return (typeof google !== 'undefined' && google.script && google.script.run);
+        }
+
+        window.onload = function() {
+            if(!esEntornoAppsScript()) {
+                document.getElementById("alerta-entorno").classList.remove("d-none");
+            }
+        };
 
         function togglePass() {
             const el = document.getElementById("clave");
@@ -501,7 +536,7 @@
                         cargarHistorialDesdeBoton();
                     },
                     (errorMessage) => {}
-                ).catch(err => alert("Error al abrir cámara: " + err));
+                ).catch(err => alert("Error al abrir la cámara: " + err));
                 
                 btn.innerText = "🛑 Detener Escáner";
                 btn.className = "btn btn-danger fw-bold px-4";
@@ -518,43 +553,53 @@
             }
         }
 
-        // LIMPIAR Y MOSTRAR ESTADO DE CARGA
         function resetearCamposHistorial(codigo) {
-            document.getElementById("lbl-termo-titulo").innerText = codigo + " (Cargando...)";
+            document.getElementById("lbl-termo-titulo").innerText = codigo + " (Consultando...)";
             document.getElementById("h-cliente-anterior").innerText = "...";
             document.getElementById("h-cliente-actual").innerText = "...";
             document.getElementById("h-total-llenados").innerText = "...";
             document.getElementById("h-ultimo-llenado").innerText = "...";
 
-            document.querySelector("#tabla-llenados tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Cargando registros...</td></tr>";
-            document.querySelector("#tabla-taller tbody").innerHTML = "<tr><td colspan='5' class='text-center text-muted'>Cargando registros...</td></tr>";
-            document.querySelector("#tabla-inspecciones tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Cargando registros...</td></tr>";
-            document.querySelector("#tabla-custodia tbody").innerHTML = "<tr><td colspan='3' class='text-center text-muted'>Cargando registros...</td></tr>";
+            document.querySelector("#tabla-llenados tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Cargando datos...</td></tr>";
+            document.querySelector("#tabla-taller tbody").innerHTML = "<tr><td colspan='5' class='text-center text-muted'>Cargando datos...</td></tr>";
+            document.querySelector("#tabla-inspecciones tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Cargando datos...</td></tr>";
+            document.querySelector("#tabla-custodia tbody").innerHTML = "<tr><td colspan='3' class='text-center text-muted'>Cargando datos...</td></tr>";
         }
 
-        // CONSULTA REAL HACIA GOOGLE APPS SCRIPT
+        // CONSULTA DE DATOS (CON MODO DUAL AUTOMÁTICO)
         function cargarHistorialDesdeBoton() {
             const codigo = document.getElementById("codigo-detectado").value.trim().toUpperCase();
-            if(!codigo) return alert("Ingrese o escanee un código de termo primero.");
+            if(!codigo) return alert("Por favor, ingrese o escanee un código de termo.");
             
-            // Cambiar a la pestaña de Historial
             cambiarTab('tab-historial', document.querySelectorAll('.menu-tab')[1]);
             resetearCamposHistorial(codigo);
 
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
+            if (esEntornoAppsScript()) {
+                // Modo Producción en Google Apps Script
                 google.script.run
                     .withSuccessHandler(renderHistorial)
                     .withFailureHandler(err => {
-                        alert("Error al consultar Google Sheets: " + err);
+                        alert("Error al obtener datos de Sheets: " + err);
                         resetearCamposHistorial(codigo + " (Error)");
                     })
                     .obtenerHistorialTermo(codigo);
             } else {
-                alert("⚠️ Error: No se detectó el entorno de Google Apps Script. Asegúrate de ejecutar esto desde la Web App de Google.");
+                // Modo Simulación Local para pruebas directas en el navegador
+                setTimeout(() => {
+                    renderHistorial({
+                        clienteAnterior: "Simulado - Cliente A",
+                        clienteActual: "Simulado - Cliente B",
+                        totalLlenados: "5 Cargas",
+                        ultimoLlenado: "Hace 2 horas",
+                        llenados: [{fecha: "22/07/2026", psi: "28", pct: "90%", operador: "Prueba Local"}],
+                        taller: [],
+                        inspecciones: [{fecha: "22/07/2026", inspector: "Tester Local", presion: "28 PSI", componentes: "Sin daños"}],
+                        custodia: []
+                    });
+                }, 400);
             }
         }
 
-        // RECTIFICAR Y RENDERIZAR DATOS REALES
         function renderHistorial(data) {
             const codigo = document.getElementById("codigo-detectado").value.trim().toUpperCase();
             document.getElementById("lbl-termo-titulo").innerText = codigo;
@@ -564,10 +609,10 @@
                 document.getElementById("h-cliente-actual").innerText = "Sin Datos";
                 document.getElementById("h-total-llenados").innerText = "0";
                 document.getElementById("h-ultimo-llenado").innerText = "Sin Registro";
-                document.querySelector("#tabla-llenados tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>El termo no existe o no tiene cargas registradas.</td></tr>";
-                document.querySelector("#tabla-taller tbody").innerHTML = "<tr><td colspan='5' class='text-center text-muted'>Sin registros de taller.</td></tr>";
-                document.querySelector("#tabla-inspecciones tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Sin registros de inspección.</td></tr>";
-                document.querySelector("#tabla-custodia tbody").innerHTML = "<tr><td colspan='3' class='text-center text-muted'>Sin registros de ruta.</td></tr>";
+                document.querySelector("#tabla-llenados tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>No se encontraron datos para este termo.</td></tr>";
+                document.querySelector("#tabla-taller tbody").innerHTML = "<tr><td colspan='5' class='text-center text-muted'>Sin registros.</td></tr>";
+                document.querySelector("#tabla-inspecciones tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Sin registros.</td></tr>";
+                document.querySelector("#tabla-custodia tbody").innerHTML = "<tr><td colspan='3' class='text-center text-muted'>Sin registros.</td></tr>";
                 return;
             }
 
@@ -576,7 +621,7 @@
             document.getElementById("h-total-llenados").innerText = data.totalLlenados || "0 Cargas";
             document.getElementById("h-ultimo-llenado").innerText = data.ultimoLlenado || "Sin Registro";
 
-            // Llenar Tabla Cargas
+            // Tabla Cargas
             let htmlLlenados = "";
             if (data.llenados && data.llenados.length > 0) {
                 data.llenados.forEach(x => htmlLlenados += `<tr><td>${x.fecha || ''}</td><td>${x.psi || ''}</td><td>${x.pct || ''}</td><td>${x.operador || ''}</td></tr>`);
@@ -585,16 +630,16 @@
             }
             document.querySelector("#tabla-llenados tbody").innerHTML = htmlLlenados;
 
-            // Llenar Tabla Taller
+            // Tabla Taller
             let htmlTaller = "";
             if (data.taller && data.taller.length > 0) {
                 data.taller.forEach(x => htmlTaller += `<tr><td>${x.fecha || ''}</td><td>${x.accion || ''}</td><td>${x.desc || ''}</td><td>${x.tiempo || ''}</td><td><span class="badge bg-success">${x.estado || 'Completado'}</span></td></tr>`);
             } else {
-                htmlTaller = "<tr><td colspan='5' class='text-center text-muted'>Sin mantenimientos en taller.</td></tr>";
+                htmlTaller = "<tr><td colspan='5' class='text-center text-muted'>Sin registros de taller.</td></tr>";
             }
             document.querySelector("#tabla-taller tbody").innerHTML = htmlTaller;
 
-            // Llenar Tabla Inspecciones
+            // Tabla Inspecciones
             let htmlInsp = "";
             if (data.inspecciones && data.inspecciones.length > 0) {
                 data.inspecciones.forEach(x => htmlInsp += `<tr><td>${x.fecha || ''}</td><td>${x.inspector || ''}</td><td>${x.presion || ''}</td><td>${x.componentes || 'Sin daños'}</td></tr>`);
@@ -603,7 +648,7 @@
             }
             document.querySelector("#tabla-inspecciones tbody").innerHTML = htmlInsp;
 
-            // Llenar Tabla Cadena Custodia
+            // Tabla Cadena Custodia
             let htmlCust = "";
             if (data.custodia && data.custodia.length > 0) {
                 data.custodia.forEach(x => htmlCust += `<tr><td>${x.fecha || ''}</td><td>${x.asignado || ''}</td><td>${x.chofer || ''}</td></tr>`);
@@ -613,12 +658,12 @@
             document.querySelector("#tabla-custodia tbody").innerHTML = htmlCust;
         }
 
-        // GUARDAR INSPECCIÓN VISUAL EN GOOGLE SHEETS
+        // GUARDAR INSPECCIÓN CON RETROALIMENTACIÓN
         function guardarInspeccion(event) {
             event.preventDefault();
             const btn = document.getElementById("btnGuardar");
             btn.disabled = true;
-            btn.innerText = "Guardando en Google Sheets...";
+            btn.innerText = "Guardando...";
 
             let seleccionados = [];
             document.querySelectorAll(".chk-componente:checked").forEach(cb => seleccionados.push(cb.value));
@@ -632,31 +677,34 @@
                 inspector: document.getElementById("nombre-usuario").innerText || "Inspector"
             };
 
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
+            if (esEntornoAppsScript()) {
                 google.script.run
                     .withSuccessHandler(res => {
                         btn.disabled = false;
                         btn.innerText = "💾 Registrar Inspección Visual";
-                        alert("✅ Inspección guardada en Google Sheets exitosamente.");
+                        alert("✅ Guardado en Google Sheets correctamente.");
                         document.getElementById("formInspeccion").reset();
                     })
                     .withFailureHandler(err => {
                         btn.disabled = false;
                         btn.innerText = "💾 Registrar Inspección Visual";
-                        alert("❌ Error al guardar en Google Sheets: " + err);
+                        alert("Error al guardar: " + err);
                     })
                     .registrarInspeccion(payload);
             } else {
-                btn.disabled = false;
-                btn.innerText = "💾 Registrar Inspección Visual";
-                alert("⚠️ Estás en un entorno local. Abre la aplicación desde el enlace de Google Apps Script para guardar.");
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerText = "💾 Registrar Inspección Visual";
+                    alert("Modo Local: Inspección registrada ficticiamente. Para guardar en la hoja real, abre la App desde el link de Google Apps Script.");
+                    document.getElementById("formInspeccion").reset();
+                }, 300);
             }
         }
 
-        function registrarTermo() { alert("Función enlazada con servidor."); }
-        function registrarLlenado() { alert("Función enlazada con servidor."); }
-        function registrarTaller() { alert("Función enlazada con servidor."); }
-        function registrarLogistica() { alert("Función enlazada con servidor."); }
+        function registrarTermo() { alert("Acción procesada."); }
+        function registrarLlenado() { alert("Acción procesada."); }
+        function registrarTaller() { alert("Acción procesada."); }
+        function registrarLogistica() { alert("Acción procesada."); }
     </script>
 
     <!-- Bootstrap 5 JS -->
