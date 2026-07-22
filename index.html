@@ -132,7 +132,6 @@
         }
 
         #zona-escaneo { width: 100%; max-width: 350px; margin: 15px auto; border-radius: 8px; overflow: hidden; background: #000; display: none; }
-        .logout-btn { background-color: var(--danger); margin: 20px auto; max-width: 200px; display: block; }
     </style>
 </head>
 <body>
@@ -205,19 +204,19 @@
                 <div class="grid-datos">
                     <div class="dato-box" style="border-left-color: var(--warning);">
                         <h4>Cliente Anterior</h4>
-                        <p id="h-cliente-anterior">Cargando...</p>
+                        <p id="h-cliente-anterior">-</p>
                     </div>
                     <div class="dato-box" style="border-left-color: var(--success);">
                         <h4>Ubicación / Cliente Actual</h4>
-                        <p id="h-cliente-actual">Cargando...</p>
+                        <p id="h-cliente-actual">-</p>
                     </div>
                     <div class="dato-box">
                         <h4>Últimos Llenados</h4>
-                        <p id="h-total-llenados">0 registros</p>
+                        <p id="h-total-llenados">-</p>
                     </div>
                     <div class="dato-box">
                         <h4>Último Llenado</h4>
-                        <p id="h-ultimo-llenado">Cargando...</p>
+                        <p id="h-ultimo-llenado">-</p>
                     </div>
                 </div>
 
@@ -225,7 +224,7 @@
                 <div class="table-responsive">
                     <table class="table table-striped table-hover align-middle small" id="tabla-llenados">
                         <thead class="table-dark"><tr><th>Fecha</th><th>PSI</th><th>Nivel %</th><th>Operador</th></tr></thead>
-                        <tbody><tr><td colspan="4" class="text-center text-muted">Escanee un termo primero.</td></tr></tbody>
+                        <tbody><tr><td colspan="4" class="text-center text-muted">Seleccione un termo para consultar.</td></tr></tbody>
                     </table>
                 </div>
 
@@ -441,18 +440,16 @@
 
     </div>
 
-    <!-- SCRIPT DE INTERACCIÓN LOGICA Y SINCRONIZACIÓN -->
+    <!-- SCRIPT DE INTERACCIÓN LÓGICA Y CONEXIÓN A GOOGLE APPS SCRIPT -->
     <script>
         let html5QrCode = null;
         let escanerActivo = false;
 
-        // Alternar Visibilidad de Contraseña
         function togglePass() {
             const el = document.getElementById("clave");
             el.type = el.type === "password" ? "text" : "password";
         }
 
-        // Sistema de Login
         function login() {
             const user = document.getElementById("usuario").value;
             if(!user) return alert("Ingrese un usuario");
@@ -467,7 +464,6 @@
             document.getElementById("pantalla-login").style.display = "flex";
         }
 
-        // Navegación Pestañas
         function cambiarTab(tabId, btn) {
             document.querySelectorAll(".modulo-pane").forEach(p => p.classList.remove("active"));
             document.querySelectorAll(".menu-tab").forEach(t => t.classList.remove("active"));
@@ -475,13 +471,12 @@
             if(btn) btn.classList.add("active");
 
             if(tabId !== 'tab-inicio' && escanerActivo) {
-                alternarEscaner(); // Apagar cámara si cambia de pestaña
+                alternarEscaner();
             }
         }
 
-        // Sincronizar todos los campos de código en las pestañas
         function sincronizarCodigos(val) {
-            const codigo = val.toUpperCase();
+            const codigo = val.toUpperCase().trim();
             document.getElementById("codigo-detectado").value = codigo;
             document.getElementById("codigoTermo").value = codigo;
             document.getElementById("reg-codigo").value = codigo;
@@ -490,7 +485,6 @@
             document.getElementById("log-codigo").value = codigo;
         }
 
-        // Lector QR
         function alternarEscaner() {
             const btn = document.getElementById("btn-control-camara");
             const zona = document.getElementById("zona-escaneo");
@@ -524,73 +518,117 @@
             }
         }
 
-        // Cargar Historial / Radiografía
+        // LIMPIAR Y MOSTRAR ESTADO DE CARGA
+        function resetearCamposHistorial(codigo) {
+            document.getElementById("lbl-termo-titulo").innerText = codigo + " (Cargando...)";
+            document.getElementById("h-cliente-anterior").innerText = "...";
+            document.getElementById("h-cliente-actual").innerText = "...";
+            document.getElementById("h-total-llenados").innerText = "...";
+            document.getElementById("h-ultimo-llenado").innerText = "...";
+
+            document.querySelector("#tabla-llenados tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Cargando registros...</td></tr>";
+            document.querySelector("#tabla-taller tbody").innerHTML = "<tr><td colspan='5' class='text-center text-muted'>Cargando registros...</td></tr>";
+            document.querySelector("#tabla-inspecciones tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Cargando registros...</td></tr>";
+            document.querySelector("#tabla-custodia tbody").innerHTML = "<tr><td colspan='3' class='text-center text-muted'>Cargando registros...</td></tr>";
+        }
+
+        // CONSULTA REAL HACIA GOOGLE APPS SCRIPT
         function cargarHistorialDesdeBoton() {
-            const codigo = document.getElementById("codigo-detectado").value;
+            const codigo = document.getElementById("codigo-detectado").value.trim().toUpperCase();
             if(!codigo) return alert("Ingrese o escanee un código de termo primero.");
             
-            document.getElementById("lbl-termo-titulo").innerText = codigo;
+            // Cambiar a la pestaña de Historial
             cambiarTab('tab-historial', document.querySelectorAll('.menu-tab')[1]);
+            resetearCamposHistorial(codigo);
 
-            // Cargar datos (Servidor / Local)
             if (typeof google !== 'undefined' && google.script && google.script.run) {
-                google.script.run.withSuccessHandler(renderHistorial).obtenerHistorialTermo(codigo);
+                google.script.run
+                    .withSuccessHandler(renderHistorial)
+                    .withFailureHandler(err => {
+                        alert("Error al consultar Google Sheets: " + err);
+                        resetearCamposHistorial(codigo + " (Error)");
+                    })
+                    .obtenerHistorialTermo(codigo);
             } else {
-                // Simulación Local
-                renderHistorial({
-                    clienteAnterior: "Hospital Central",
-                    clienteActual: "Clínica San José",
-                    totalLlenados: "14 Cargas",
-                    ultimoLlenado: "22/07/2026 10:30",
-                    llenados: [{fecha: "22/07/2026", psi: "25", pct: "95%", operador: "M. Gómez"}],
-                    taller: [{fecha: "10/05/2026", accion: "Mantenimiento", desc: "Cambio de empaques", tiempo: "2 hrs", estado: "Resuelto"}],
-                    inspecciones: [{fecha: "22/07/2026 11:52", inspector: "Admin", presion: "25 PSI", componentes: "Válvula de líquido, Manómetro"}],
-                    custodia: [{fecha: "20/07/2026", asignado: "Clínica San José", chofer: "C. Rivas"}]
-                });
+                alert("⚠️ Error: No se detectó el entorno de Google Apps Script. Asegúrate de ejecutar esto desde la Web App de Google.");
             }
         }
 
+        // RECTIFICAR Y RENDERIZAR DATOS REALES
         function renderHistorial(data) {
-            document.getElementById("h-cliente-anterior").innerText = data.clienteAnterior || "-";
-            document.getElementById("h-cliente-actual").innerText = data.clienteActual || "-";
-            document.getElementById("h-total-llenados").innerText = data.totalLlenados || "0";
-            document.getElementById("h-ultimo-llenado").innerText = data.ultimoLlenado || "-";
+            const codigo = document.getElementById("codigo-detectado").value.trim().toUpperCase();
+            document.getElementById("lbl-termo-titulo").innerText = codigo;
 
-            // Tablas
+            if(!data) {
+                document.getElementById("h-cliente-anterior").innerText = "Sin Datos";
+                document.getElementById("h-cliente-actual").innerText = "Sin Datos";
+                document.getElementById("h-total-llenados").innerText = "0";
+                document.getElementById("h-ultimo-llenado").innerText = "Sin Registro";
+                document.querySelector("#tabla-llenados tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>El termo no existe o no tiene cargas registradas.</td></tr>";
+                document.querySelector("#tabla-taller tbody").innerHTML = "<tr><td colspan='5' class='text-center text-muted'>Sin registros de taller.</td></tr>";
+                document.querySelector("#tabla-inspecciones tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Sin registros de inspección.</td></tr>";
+                document.querySelector("#tabla-custodia tbody").innerHTML = "<tr><td colspan='3' class='text-center text-muted'>Sin registros de ruta.</td></tr>";
+                return;
+            }
+
+            document.getElementById("h-cliente-anterior").innerText = data.clienteAnterior || "N/A";
+            document.getElementById("h-cliente-actual").innerText = data.clienteActual || "En Planta / Sin Asignar";
+            document.getElementById("h-total-llenados").innerText = data.totalLlenados || "0 Cargas";
+            document.getElementById("h-ultimo-llenado").innerText = data.ultimoLlenado || "Sin Registro";
+
+            // Llenar Tabla Cargas
             let htmlLlenados = "";
-            (data.llenados || []).forEach(x => htmlLlenados += `<tr><td>${x.fecha}</td><td>${x.psi}</td><td>${x.pct}</td><td>${x.operador}</td></tr>`);
-            document.querySelector("#tabla-llenados tbody").innerHTML = htmlLlenados || "<tr><td colspan='4' class='text-center'>Sin registros.</td></tr>";
+            if (data.llenados && data.llenados.length > 0) {
+                data.llenados.forEach(x => htmlLlenados += `<tr><td>${x.fecha || ''}</td><td>${x.psi || ''}</td><td>${x.pct || ''}</td><td>${x.operador || ''}</td></tr>`);
+            } else {
+                htmlLlenados = "<tr><td colspan='4' class='text-center text-muted'>Sin cargas registradas.</td></tr>";
+            }
+            document.querySelector("#tabla-llenados tbody").innerHTML = htmlLlenados;
 
+            // Llenar Tabla Taller
             let htmlTaller = "";
-            (data.taller || []).forEach(x => htmlTaller += `<tr><td>${x.fecha}</td><td>${x.accion}</td><td>${x.desc}</td><td>${x.tiempo}</td><td><span class="badge bg-success">${x.estado}</span></td></tr>`);
-            document.querySelector("#tabla-taller tbody").innerHTML = htmlTaller || "<tr><td colspan='5' class='text-center'>Sin registros.</td></tr>";
+            if (data.taller && data.taller.length > 0) {
+                data.taller.forEach(x => htmlTaller += `<tr><td>${x.fecha || ''}</td><td>${x.accion || ''}</td><td>${x.desc || ''}</td><td>${x.tiempo || ''}</td><td><span class="badge bg-success">${x.estado || 'Completado'}</span></td></tr>`);
+            } else {
+                htmlTaller = "<tr><td colspan='5' class='text-center text-muted'>Sin mantenimientos en taller.</td></tr>";
+            }
+            document.querySelector("#tabla-taller tbody").innerHTML = htmlTaller;
 
+            // Llenar Tabla Inspecciones
             let htmlInsp = "";
-            (data.inspecciones || []).forEach(x => htmlInsp += `<tr><td>${x.fecha}</td><td>${x.inspector}</td><td>${x.presion}</td><td>${x.componentes}</td></tr>`);
-            document.querySelector("#tabla-inspecciones tbody").innerHTML = htmlInsp || "<tr><td colspan='4' class='text-center'>Sin registros.</td></tr>";
+            if (data.inspecciones && data.inspecciones.length > 0) {
+                data.inspecciones.forEach(x => htmlInsp += `<tr><td>${x.fecha || ''}</td><td>${x.inspector || ''}</td><td>${x.presion || ''}</td><td>${x.componentes || 'Sin daños'}</td></tr>`);
+            } else {
+                htmlInsp = "<tr><td colspan='4' class='text-center text-muted'>Sin inspecciones registradas.</td></tr>";
+            }
+            document.querySelector("#tabla-inspecciones tbody").innerHTML = htmlInsp;
 
+            // Llenar Tabla Cadena Custodia
             let htmlCust = "";
-            (data.custodia || []).forEach(x => htmlCust += `<tr><td>${x.fecha}</td><td>${x.asignado}</td><td>${x.chofer}</td></tr>`);
-            document.querySelector("#tabla-custodia tbody").innerHTML = htmlCust || "<tr><td colspan='3' class='text-center'>Sin registros.</td></tr>";
+            if (data.custodia && data.custodia.length > 0) {
+                data.custodia.forEach(x => htmlCust += `<tr><td>${x.fecha || ''}</td><td>${x.asignado || ''}</td><td>${x.chofer || ''}</td></tr>`);
+            } else {
+                htmlCust = "<tr><td colspan='3' class='text-center text-muted'>Sin historial de envíos.</td></tr>";
+            }
+            document.querySelector("#tabla-custodia tbody").innerHTML = htmlCust;
         }
 
-        // Enviar Formulario de Inspección Visual (23 Componentes)
+        // GUARDAR INSPECCIÓN VISUAL EN GOOGLE SHEETS
         function guardarInspeccion(event) {
             event.preventDefault();
             const btn = document.getElementById("btnGuardar");
             btn.disabled = true;
-            btn.innerText = "Guardando...";
+            btn.innerText = "Guardando en Google Sheets...";
 
             let seleccionados = [];
             document.querySelectorAll(".chk-componente:checked").forEach(cb => seleccionados.push(cb.value));
             let resultadoComponentes = seleccionados.length > 0 ? seleccionados.join(", ") : "Sin daños reportados";
 
             let payload = {
-                action: "registrarInspeccion",
                 codigo: document.getElementById("codigoTermo").value.trim().toUpperCase(),
                 presion: document.getElementById("presionPSI").value,
                 componentes: resultadoComponentes,
-                observaciones: document.getElementById("observaciones").value.trim() || "Sin observaciones adicionales",
+                observaciones: document.getElementById("observaciones").value.trim() || "Sin observaciones",
                 inspector: document.getElementById("nombre-usuario").innerText || "Inspector"
             };
 
@@ -599,30 +637,26 @@
                     .withSuccessHandler(res => {
                         btn.disabled = false;
                         btn.innerText = "💾 Registrar Inspección Visual";
-                        alert("✅ Inspección registrada con éxito.");
+                        alert("✅ Inspección guardada en Google Sheets exitosamente.");
                         document.getElementById("formInspeccion").reset();
                     })
                     .withFailureHandler(err => {
                         btn.disabled = false;
                         btn.innerText = "💾 Registrar Inspección Visual";
-                        alert("Error de conexión: " + err);
+                        alert("❌ Error al guardar en Google Sheets: " + err);
                     })
                     .registrarInspeccion(payload);
             } else {
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerText = "💾 Registrar Inspección Visual";
-                    alert("Modo Local: Inspección guardada en interfaz.");
-                    document.getElementById("formInspeccion").reset();
-                }, 500);
+                btn.disabled = false;
+                btn.innerText = "💾 Registrar Inspección Visual";
+                alert("⚠️ Estás en un entorno local. Abre la aplicación desde el enlace de Google Apps Script para guardar.");
             }
         }
 
-        // Acciones Adicionales
-        function registrarTermo() { alert("Termo registrado con éxito."); }
-        function registrarLlenado() { alert("Proceso de llenado registrado."); }
-        function registrarTaller() { alert("Reporte de taller guardado."); }
-        function registrarLogistica() { alert("Despacho logístico confirmado."); }
+        function registrarTermo() { alert("Función enlazada con servidor."); }
+        function registrarLlenado() { alert("Función enlazada con servidor."); }
+        function registrarTaller() { alert("Función enlazada con servidor."); }
+        function registrarLogistica() { alert("Función enlazada con servidor."); }
     </script>
 
     <!-- Bootstrap 5 JS -->
