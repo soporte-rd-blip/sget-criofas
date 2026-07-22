@@ -74,7 +74,7 @@
             <p style="text-align: center; font-size: 12px; color: #666; margin-top: -8px;">Sistema de Gestión Criogénicos</p>
             <div class="form-group">
                 <label for="usuario">Usuario:</label>
-                <input type="text" id="usuario" placeholder="Ej. jperez">
+                <input type="text" id="usuario" placeholder="Ej. admin o jperez">
             </div>
             <div class="form-group">
                 <label for="clave">Contraseña:</label>
@@ -357,6 +357,23 @@
             const clave = document.getElementById("clave").value.trim();
             if(usuario === "" || clave === "") return alert("Complete los datos.");
 
+            // 1. Acceso de respaldo / local si usan admin y 123456
+            if (usuario.toLowerCase() === "admin" && clave === "123456") {
+                const datosLocales = {
+                    usuario: "admin",
+                    nombre: "Administrador",
+                    rol: "administrador"
+                };
+                localStorage.setItem("usuario", datosLocales.usuario); 
+                localStorage.setItem("nombre", datosLocales.nombre); 
+                localStorage.setItem("rol", datosLocales.rol);
+                
+                document.getElementById("llenado-operador").value = datosLocales.nombre;
+                construirDashboardPorRol(datosLocales.rol, datosLocales.nombre);
+                return;
+            }
+
+            // 2. Consulta estándar al Google Sheet para otros usuarios
             const d = new URLSearchParams(); 
             d.append("action", "login"); 
             d.append("usuario", usuario); 
@@ -372,7 +389,7 @@
                     
                     document.getElementById("llenado-operador").value = datos.nombre || datos.usuario;
                     construirDashboardPorRol(datos.rol, datos.nombre);
-                } else { alert(datos.mensaje); }
+                } else { alert(datos.mensaje || "Usuario o clave incorrecta."); }
             }).catch(err => alert("Error de Login: " + err.message));
         }
 
