@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SGC - Criofast Activos</title>
+    <title>SGC - Cryofast</title>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         :root {
@@ -12,56 +12,61 @@
             --success: #28a745;
             --danger: #dc3545;
             --warning: #ffc107;
-            --dark: #343a40;
-            --light: #f8f9fa;
+            --dark: #1e293b;
+            --light: #f8fafc;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f9;
+            background-color: #f1f5f9;
             margin: 0;
-            color: #333;
+            color: #334155;
         }
         .flex-center { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .container { background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); width: 100%; max-width: 420px; box-sizing: border-box; }
-        h2 { margin-top: 0; color: var(--dark); text-align: center; font-size: 22px; border-bottom: 2px solid var(--light); padding-bottom: 10px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; color: #555; font-size: 14px; font-weight: 600; }
-        input[type="text"], input[type="password"], input[type="number"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        button { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; font-weight: bold; }
+        h2 { margin-top: 0; color: var(--dark); text-align: center; font-size: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .form-group { margin-bottom: 15px; position: relative; }
+        label { display: block; margin-bottom: 6px; color: #475569; font-size: 13px; font-weight: 600; }
+        input[type="text"], input[type="password"], input[type="number"], select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        
+        /* BOTÓN MOSTRAR/OCULTAR CONTRASEÑA */
+        .pwd-wrapper { position: relative; }
+        .toggle-pwd { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; user-select: none; font-size: 16px; opacity: 0.7; }
+
+        button { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        button:hover { background-color: var(--primary-hover); }
         
         /* DASHBOARD */
-        .header-bar { background-color: var(--dark); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .header-bar h3 { margin: 0; font-size: 18px; }
-        .user-badge { background: rgba(255,255,255,0.15); padding: 5px 10px; border-radius: 20px; font-size: 12px; }
-        .menu-navegacion { display: flex; background: #fff; overflow-x: auto; border-bottom: 1px solid #dee2e6; }
-        .menu-tab { flex: 1; padding: 12px; text-align: center; background: none; border: none; color: #6c757d; font-size: 11px; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
-        .menu-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .modulo-pane { display: none; padding: 20px; max-width: 600px; margin: auto; }
+        .header-bar { background-color: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header-bar h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .user-badge { background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .menu-navegacion { display: flex; background: #fff; overflow-x: auto; border-bottom: 1px solid #e2e8f0; }
+        .menu-tab { flex: 1; padding: 12px 15px; text-align: center; background: none; border: none; color: #64748b; font-size: 12px; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
+        .menu-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: #f0f7ff; }
+        .modulo-pane { display: none; padding: 20px; max-width: 650px; margin: auto; }
         .modulo-pane.active { display: block; }
-        .card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #e2e8f0; }
         
-        /* FORMULARIO AVANZADO LLENADO */
-        .seccion-titulo { font-size: 13px; font-weight: bold; color: var(--primary); text-transform: uppercase; margin: 15px 0 8px 0; border-bottom: 1px dashed #ccc; padding-bottom: 4px; }
+        .seccion-titulo { font-size: 12px; font-weight: bold; color: var(--primary); text-transform: uppercase; margin: 15px 0 8px 0; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
         .fila-doble { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-        /* DISEÑO DE HISTORIAL */
+        /* HISTORIAL */
         .grid-datos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .dato-box { background: var(--light); padding: 12px; border-radius: 6px; border-left: 4px solid var(--primary); }
-        .dato-box h4 { margin: 0 0 5px 0; font-size: 12px; color: #666; text-transform: uppercase; }
-        .dato-box p { margin: 0; font-size: 15px; font-weight: bold; color: var(--dark); }
+        .dato-box { background: var(--light); padding: 12px; border-radius: 6px; border-left: 4px solid var(--primary); border: 1px solid #e2e8f0; border-left-width: 4px; }
+        .dato-box h4 { margin: 0 0 5px 0; font-size: 11px; color: #64748b; text-transform: uppercase; }
+        .dato-box p { margin: 0; font-size: 14px; font-weight: bold; color: var(--dark); }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
         table th { background: var(--dark); color: white; padding: 8px; text-align: left; }
-        table td { padding: 8px; border-bottom: 1px solid #eee; }
+        table td { padding: 8px; border-bottom: 1px solid #e2e8f0; }
         
         #zona-escaneo { width: 100%; max-width: 350px; margin: 15px auto; border-radius: 8px; overflow: hidden; background: #000; display: none; }
         .logout-btn { background-color: var(--danger); margin: 20px auto; max-width: 200px; display: block; }
         
         /* CHECKLIST COMPONENTES */
-        .checklist-container { max-height: 280px; overflow-y: auto; border: 1px solid #ccc; padding: 12px; border-radius: 6px; background: #fafafa; margin-bottom: 15px; }
-        .checklist-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; cursor: pointer; padding: 4px; border-radius: 4px; }
-        .checklist-item:hover { background-color: #f0f0f0; }
-        .checklist-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        .checklist-container { max-height: 250px; overflow-y: auto; border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; background: #f8fafc; margin-bottom: 15px; }
+        .checklist-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; cursor: pointer; padding: 4px; border-radius: 4px; }
+        .checklist-item:hover { background-color: #e2e8f0; }
+        .checklist-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -69,14 +74,18 @@
     <!-- ================= 1. LOGIN ================= -->
     <div id="pantalla-login" class="flex-center">
         <div class="container">
-            <h2>SGC CRYOFAST</h2>
+            <h2>🚛 SGC - Cryofast</h2>
+            <p style="text-align: center; font-size: 12px; color: #64748b; margin-top: -8px; margin-bottom: 20px;">Sistema de Gestión Criogénicos</p>
             <div class="form-group">
                 <label for="usuario">Usuario:</label>
-                <input type="text" id="usuario" placeholder="Ej. jperez">
+                <input type="text" id="usuario" placeholder="Ej. admin">
             </div>
             <div class="form-group">
                 <label for="clave">Contraseña:</label>
-                <input type="password" id="clave" placeholder="••••••••">
+                <div class="pwd-wrapper">
+                    <input type="password" id="clave" placeholder="••••••••">
+                    <span class="toggle-pwd" onclick="alternarVisibilidadPassword()">👁️</span>
+                </div>
             </div>
             <button type="button" onclick="login()">Ingresar al Sistema</button>
         </div>
@@ -85,16 +94,16 @@
     <!-- ================= 2. DASHBOARD PRINCIPAL ================= -->
     <div id="pantalla-dashboard" style="display:none;">
         <div class="header-bar">
+            <h3>🚛 SGC - Cryofast</h3>
             <div>
-                <h3>SGTC Criogénicos</h3>
-                <span class="user-badge" id="badge-rol">Rol: Carga...</span>
+                <span id="nombre-usuario" style="font-weight: bold; font-size: 13px; margin-right: 8px;">Usuario</span>
+                <span class="user-badge" id="badge-rol">Rol</span>
             </div>
-            <span id="nombre-usuario" style="font-weight: bold;">Usuario</span>
         </div>
 
         <div class="menu-navegacion" id="barra-navegacion">
-            <button class="menu-tab active" onclick="cambiarTab('tab-inicio', this)" id="tab-btn-inicio">📸 Escanear QR</button>
-            <button class="menu-tab" onclick="cambiarTab('tab-historial', this)" id="tab-btn-historial" style="background: #e3f2fd;">📋 Historial Completo</button>
+            <button class="menu-tab active" onclick="cambiarTab('tab-inicio', this)" id="tab-btn-inicio">📸 Escanear QR/Barra</button>
+            <button class="menu-tab" onclick="cambiarTab('tab-historial', this)" id="tab-btn-historial">📋 Historial</button>
             <button class="menu-tab" onclick="cambiarTab('tab-termos', this)" id="tab-btn-termos">Termos</button>
             <button class="menu-tab" onclick="cambiarTab('tab-llenado', this)" id="tab-btn-llenado">Llenados</button>
             <button class="menu-tab" onclick="cambiarTab('tab-taller', this)" id="tab-btn-taller">Taller</button>
@@ -105,14 +114,14 @@
         <!-- TAB: ESCANER -->
         <div id="tab-inicio" class="modulo-pane active">
             <div class="card" style="text-align: center;">
-                <h3>Lector de Termos</h3>
-                <p style="font-size:13px; color:#666;">Inicia la cámara para identificar el termo y descargar su reporte de vida.</p>
-                <button type="button" id="btn-control-camara" style="background-color: var(--success);" onclick="alternarEscaner()">📸 Iniciar Cámara QR</button>
+                <h3>Lector de Termos Multiformato</h3>
+                <p style="font-size:12px; color:#64748b;">Escané el código QR o Código de Barras estándar del activo.</p>
+                <button type="button" id="btn-control-camara" style="background-color: var(--success);" onclick="alternarEscaner()">📸 Activar Cámara</button>
                 <div id="zona-escaneo"></div>
                 
                 <div class="form-group" style="margin-top: 20px; text-align: left;">
-                    <label for="codigo-detectado">Código Seleccionado Activo:</label>
-                    <input type="text" id="codigo-detectado" placeholder="Escriba o escanee un código" oninput="sincronizarCodigos(this.value)">
+                    <label for="codigo-detectado">Código del Termo (Máx. 16 dígitos):</label>
+                    <input type="text" id="codigo-detectado" maxlength="16" placeholder="Ingrese o escanee el código" oninput="sincronizarCodigos(this.value)">
                 </div>
                 <button type="button" style="background-color: var(--dark);" onclick="cargarHistorialDesdeBoton()">Consultar Datos de este Termo</button>
             </div>
@@ -133,8 +142,8 @@
                         <p id="h-cliente-actual">Cargando...</p>
                     </div>
                     <div class="dato-box">
-                        <h4>Total de Llenados</h4>
-                        <p id="h-total-llenados">0 veces</p>
+                        <h4>Últimos Llenados (10)</h4>
+                        <p id="h-total-llenados">0 registros</p>
                     </div>
                     <div class="dato-box">
                         <h4>Último Llenado</h4>
@@ -142,21 +151,27 @@
                     </div>
                 </div>
 
-                <h3>Últimas 10 Cargas Realizadas</h3>
+                <h3>Historial de Llenados</h3>
                 <table id="tabla-llenados">
                     <thead><tr><th>Fecha</th><th>PSI</th><th>Nivel %</th><th>Operador</th></tr></thead>
-                    <tbody><tr><td colspan="4">Escanee un termo primero.</td></tr></tbody>
+                    <tbody><tr><td colspan="4">Seleccione o escanee un termo.</td></tr></tbody>
                 </table>
 
                 <h3>Historial de Mantenimientos (Taller)</h3>
                 <table id="tabla-taller">
                     <thead><tr><th>Fecha</th><th>Acción</th><th>Descripción Técnica</th><th>Tiempo</th><th>Estado</th></tr></thead>
-                    <tbody><tr><td colspan="5">Sin registros de taller.</td></tr></tbody>
+                    <tbody><tr><td colspan="5">Sin registros.</td></tr></tbody>
+                </table>
+
+                <h3>Historial de Inspecciones Visuales</h3>
+                <table id="tabla-inspecciones">
+                    <thead><tr><th>Fecha</th><th>PSI</th><th>Componentes Notificados</th></tr></thead>
+                    <tbody><tr><td colspan="3">Sin inspecciones registradas.</td></tr></tbody>
                 </table>
                 
-                <h3 style="margin-top:20px;">Cadena de Custodia (Últimos Movimientos)</h3>
+                <h3 style="margin-top:20px;">Cadena de Custodia / Movimientos Logísticos</h3>
                 <table id="tabla-custodia">
-                    <thead><tr><th>Fecha</th><th>Asignado A:</th><th>Responsable Logístico</th></tr></thead>
+                    <thead><tr><th>Fecha</th><th>Cliente Destino</th><th>Chofer Responsable</th></tr></thead>
                     <tbody><tr><td colspan="3">Sin registros de ruta.</td></tr></tbody>
                 </table>
             </div>
@@ -167,27 +182,29 @@
             <div class="card">
                 <h3>Registro de Termo Nuevo</h3>
                 <div class="form-group">
-                    <label for="reg-codigo">Código Interno Termo (QR):</label>
-                    <input type="text" id="reg-codigo" placeholder="Ej. T-001">
+                    <label for="reg-codigo">Código Interno Termo:</label>
+                    <input type="text" id="reg-codigo" maxlength="16" placeholder="Ej. T-001">
                 </div>
                 <div class="form-group">
                     <label for="reg-serie">Número de Serie (Fábrica):</label>
                     <input type="text" id="reg-serie" placeholder="Ej. SN-987654">
                 </div>
                 <div class="form-group">
-                    <label for="reg-capacidad">Capacidad:</label>
+                    <label for="reg-capacidad">Capacidad (Litros o Libras):</label>
                     <select id="reg-capacidad">
                         <option value="180 Litros">180 Litros</option>
                         <option value="230 Litros">230 Litros</option>
                         <option value="1000 Litros">1000 Litros</option>
+                        <option value="450 Libras">450 Libras</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="reg-gas">Producto (Gas):</label>
+                    <label for="reg-gas">Sustancia / Producto:</label>
                     <select id="reg-gas">
                         <option value="Oxígeno (O2)">Oxígeno (O2)</option>
                         <option value="Nitrógeno (N2)">Nitrógeno (N2)</option>
                         <option value="Argón (Ar)">Argón (Ar)</option>
+                        <option value="Dióxido de Carbono (CO2)">Dióxido de Carbono (CO2)</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -202,10 +219,9 @@
         <div id="tab-llenado" class="modulo-pane">
             <div class="card">
                 <h3>Registrar Proceso de Llenado</h3>
-                
                 <div class="form-group">
                     <label for="llenado-codigo">Código del Termo:</label>
-                    <input type="text" id="llenado-codigo" placeholder="Escanee o digite">
+                    <input type="text" id="llenado-codigo" maxlength="16" placeholder="Código del termo">
                 </div>
 
                 <div class="seccion-titulo">Presiones de Operación (PSI)</div>
@@ -218,24 +234,24 @@
                     <div class="form-group"><label for="llenado-termo-fin">PSI Termo Fin:</label><input type="number" id="llenado-termo-fin"></div>
                 </div>
 
-                <div class="seccion-titulo">Capacidad & Volumen Líquido</div>
+                <div class="seccion-titulo">Capacidad & Nivel Líquido</div>
                 <div class="fila-doble">
                     <div class="form-group"><label for="llenado-pct-ini">% Inicio:</label><input type="number" id="llenado-pct-ini"></div>
                     <div class="form-group"><label for="llenado-pct-fin">% Fin:</label><input type="number" id="llenado-pct-fin"></div>
                 </div>
                 <div class="fila-doble">
                     <div class="form-group"><label for="llenado-cantidad">Cantidad Cargada:</label><input type="number" id="llenado-cantidad" placeholder="Lts/Gals"></div>
-                    <div class="form-group"><label for="llenado-tiempo">Tiempo (minutos):</label><input type="number" id="llenado-tiempo" placeholder="Ej. 15"></div>
+                    <div class="form-group"><label for="llenado-tiempo">Tiempo de Llenado:</label><input type="text" id="llenado-tiempo" placeholder="Ej. 15 min"></div>
                 </div>
 
-                <div class="seccion-titulo">Información de Control</div>
+                <div class="seccion-titulo">Control</div>
                 <div class="form-group">
-                    <label for="llenado-operador">Operador / Técnico Responsable:</label>
+                    <label for="llenado-operador">Operador Responsable:</label>
                     <input type="text" id="llenado-operador">
                 </div>
                 <div class="form-group">
-                    <label for="llenado-observaciones">Observaciones del Proceso:</label>
-                    <textarea id="llenado-observaciones" rows="2" placeholder="Detalles o novedades encontradas..."></textarea>
+                    <label for="llenado-observaciones">Observaciones:</label>
+                    <textarea id="llenado-observaciones" rows="2" placeholder="Novedades durante el proceso..."></textarea>
                 </div>
 
                 <button type="button" style="background-color: var(--success);" onclick="registrarLlenado()">Confirmar Llenado</button>
@@ -246,36 +262,37 @@
         <div id="tab-taller" class="modulo-pane">
             <div class="card">
                 <h3>Taller & Mantenimiento</h3>
-                <div class="form-group"><label for="taller-codigo">Código del Termo:</label><input type="text" id="taller-codigo"></div>
+                <div class="form-group"><label for="taller-codigo">Código del Termo:</label><input type="text" id="taller-codigo" maxlength="16"></div>
                 <div class="form-group">
-                    <label for="taller-tipo">Acción:</label>
+                    <label for="taller-tipo">Acción Realizada:</label>
                     <select id="taller-tipo">
                         <option>Mantenimiento Preventivo Anual</option>
                         <option>Reparación Correctiva (Fuga/Válvula)</option>
                         <option>Prueba de Vacío</option>
                     </select>
                 </div>
-                <div class="form-group"><label for="taller-descripcion">Detalles del Daño/Trabajo:</label><textarea id="taller-descripcion" rows="3"></textarea></div>
-                <div class="form-group"><label for="taller-tiempo">Tiempo Invertido:</label><input type="text" id="taller-tiempo" placeholder="Ej. 3 horas / 2 días"></div>
+                <div class="form-group"><label for="taller-descripcion">Descripción del Trabajo:</label><textarea id="taller-descripcion" rows="3"></textarea></div>
+                <div class="form-group"><label for="taller-tiempo">Tiempo en Taller:</label><input type="text" id="taller-tiempo" placeholder="Ej. 2 horas / 1 día"></div>
                 <div class="form-group">
-                    <label for="taller-estado">Estado del Daño:</label>
+                    <label for="taller-estado">Estado Final:</label>
                     <select id="taller-estado">
-                        <option>Resuelto</option>
-                        <option>Pendiente</option>
+                        <option value="Resuelto">Resuelto</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Descartado">Descartado</option>
                     </select>
                 </div>
-                <button type="button" style="background-color: var(--warning); color: #333;" onclick="registrarTaller()">Guardar Reporte Técnico</button>
+                <button type="button" style="background-color: var(--warning); color: #1e293b;" onclick="registrarTaller()">Guardar Reporte de Taller</button>
             </div>
         </div>
 
         <!-- TAB: LOGÍSTICA -->
         <div id="tab-logistica" class="modulo-pane">
             <div class="card">
-                <h3>Despacho / Logística</h3>
-                <div class="form-group"><label for="log-codigo">Código del Termo:</label><input type="text" id="log-codigo"></div>
-                <div class="form-group"><label for="log-cliente">Cliente de Destino:</label><input type="text" id="log-cliente"></div>
+                <h3>Módulo de Logística</h3>
+                <div class="form-group"><label for="log-codigo">Código del Termo:</label><input type="text" id="log-codigo" maxlength="16"></div>
+                <div class="form-group"><label for="log-cliente">Cliente Destino:</label><input type="text" id="log-cliente"></div>
                 <div class="form-group"><label for="log-chofer">Chofer Asignado:</label><input type="text" id="log-chofer"></div>
-                <button type="button" onclick="registrarLogistica()">Despachar Activo</button>
+                <button type="button" onclick="registrarLogistica()">Despachar Termo</button>
             </div>
         </div>
 
@@ -283,10 +300,10 @@
         <div id="tab-inspecciones" class="modulo-pane">
             <div class="card">
                 <h3>Inspección Visual de Componentes</h3>
-                <div class="form-group"><label for="insp-codigo">Código del Termo:</label><input type="text" id="insp-codigo"></div>
+                <div class="form-group"><label for="insp-codigo">Código del Termo:</label><input type="text" id="insp-codigo" maxlength="16"></div>
                 <div class="form-group"><label for="insp-presion">Presión Actual (PSI):</label><input type="number" id="insp-presion"></div>
                 
-                <label style="margin-top: 15px; margin-bottom: 8px;">MARQUE UNICAMENTE EL EQUIPO DAÑADO:</label>
+                <label style="margin-top: 15px; margin-bottom: 8px; font-weight: bold; font-size: 12px; color: var(--danger);">SELECCIONE ÚNICAMENTE COMPONENTES DAÑADOS:</label>
                 <div class="checklist-container" id="contenedor-componentes">
                     <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Válvula de gas"> 1. Válvula de gas</label>
                     <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Válvula de liquido"> 2. Válvula de liquido</label>
@@ -320,12 +337,11 @@
         <button type="button" class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
 
-    <!-- ================= JAVASCRIPT VALIDADO Y COMPLETO ================= -->
+    <!-- ================= JAVASCRIPT VALIDADO ================= -->
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbwyZ0JJo1oWUobhaNqTYgn1NuHJM2Rhh7ESIhUCX7ypfyfUH5TiLut684CGHAigWeXR/exec";
         let html5QrcodeScanner = null;
 
-        // Comprobación de sesión al cargar página
         document.addEventListener("DOMContentLoaded", () => {
             const rolGuardado = localStorage.getItem("rol");
             const nombreGuardado = localStorage.getItem("nombre");
@@ -335,10 +351,15 @@
             }
         });
 
-        function login(){
+        function alternarVisibilidadPassword() {
+            const input = document.getElementById("clave");
+            input.type = input.type === "password" ? "text" : "password";
+        }
+
+        function login() {
             const usuario = document.getElementById("usuario").value.trim();
             const clave = document.getElementById("clave").value.trim();
-            if(usuario === "" || clave === "") return alert("Complete los datos.");
+            if(!usuario || !clave) return alert("Por favor complete todos los campos.");
 
             const d = new URLSearchParams(); 
             d.append("action", "login"); 
@@ -355,18 +376,21 @@
                     
                     document.getElementById("llenado-operador").value = datos.nombre || datos.usuario;
                     construirDashboardPorRol(datos.rol, datos.nombre);
-                } else { alert(datos.mensaje); }
-            }).catch(err => alert("Error de Login: " + err.message));
+                } else { 
+                    alert(datos.mensaje); 
+                }
+            }).catch(err => alert("Error de Conexión: " + err.message));
         }
 
         function construirDashboardPorRol(rol, nombre){
             document.getElementById("pantalla-login").style.display = "none";
             document.getElementById("pantalla-dashboard").style.display = "block";
             document.getElementById("nombre-usuario").innerHTML = nombre;
-            document.getElementById("badge-rol").innerHTML = "Rol: " + rol.toUpperCase();
+            document.getElementById("badge-rol").innerHTML = rol.toUpperCase();
 
             const r = rol.toLowerCase().trim();
             
+            // Pestañas por defecto ocultas
             document.getElementById("tab-btn-historial").style.display = "none";
             document.getElementById("tab-btn-termos").style.display = "none";
             document.getElementById("tab-btn-llenado").style.display = "none";
@@ -374,11 +398,19 @@
             document.getElementById("tab-btn-logistica").style.display = "none";
             document.getElementById("tab-btn-inspecciones").style.display = "none";
 
-            if (r === "tecnico" || r === "taller" || r === "produccion") {
+            // PERFIL CONSULTOR (SOLO LECTURA)
+            if (r === "consultor") {
+                document.getElementById("tab-btn-historial").style.display = "block";
+            } 
+            // ROL OPERATIVO
+            else if (r === "tecnico" || r === "taller" || r === "produccion") {
+                document.getElementById("tab-btn-historial").style.display = "block";
                 document.getElementById("tab-btn-llenado").style.display = "block";
                 document.getElementById("tab-btn-taller").style.display = "block";
                 document.getElementById("tab-btn-inspecciones").style.display = "block";
-            } else {
+            } 
+            // ROL ADMIN / LOGISTICA
+            else {
                 document.getElementById("tab-btn-historial").style.display = "block";
                 document.getElementById("tab-btn-termos").style.display = "block";
                 document.getElementById("tab-btn-llenado").style.display = "block";
@@ -394,16 +426,26 @@
             const zona = document.getElementById("zona-escaneo"); 
             const btn = document.getElementById("btn-control-camara");
             if (html5QrcodeScanner === null) {
-                zona.style.display = "block"; btn.innerHTML = "🛑 Detener Cámara"; btn.style.backgroundColor = "var(--danger)";
+                zona.style.display = "block"; 
+                btn.innerHTML = "🛑 Detener Cámara"; 
+                btn.style.backgroundColor = "var(--danger)";
+                
                 html5QrcodeScanner = new Html5Qrcode("zona-escaneo");
-                html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 250 } },
+                // Configuración Multiformato (QR y Códigos de Barras)
+                html5QrcodeScanner.start(
+                    { facingMode: "environment" }, 
+                    { fps: 15, qrbox: { width: 250, height: 180 } },
                     (texto) => {
-                        sincronizarCodigos(texto.trim()); detenerEscanerEfectivo();
-                        solicitarHistorialServidor(texto.trim());
+                        const limpio = texto.trim().substring(0, 16);
+                        sincronizarCodigos(limpio); 
+                        detenerEscanerEfectivo();
+                        solicitarHistorialServidor(limpio);
                     },
                     () => {}
-                ).catch(() => { alert("Verifique permisos de cámara."); detenerEscanerEfectivo(); });
-            } else { detenerEscanerEfectivo(); }
+                ).catch(() => { alert("Active los permisos de cámara en su navegador."); detenerEscanerEfectivo(); });
+            } else { 
+                detenerEscanerEfectivo(); 
+            }
         }
 
         function detenerEscanerEfectivo() {
@@ -413,7 +455,7 @@
                 html5QrcodeScanner.stop().then(() => { 
                     html5QrcodeScanner = null; 
                     zona.style.display = "none"; 
-                    btn.innerHTML = "📸 Iniciar Cámara QR"; 
+                    btn.innerHTML = "📸 Activar Cámara"; 
                     btn.style.backgroundColor = "var(--success)"; 
                 }).catch(() => { 
                     html5QrcodeScanner = null; 
@@ -423,7 +465,7 @@
         }
 
         function sincronizarCodigos(valor) {
-            const u = valor.toUpperCase();
+            const u = valor.toUpperCase().substring(0, 16);
             document.getElementById("codigo-detectado").value = u;
             document.getElementById("reg-codigo").value = u;
             document.getElementById("llenado-codigo").value = u;
@@ -439,12 +481,6 @@
         }
 
         function solicitarHistorialServidor(codigo) {
-            const rolActual = localStorage.getItem("rol") ? localStorage.getItem("rol").toLowerCase() : "";
-            if (rolActual === "tecnico" || rolActual === "taller") {
-                alert("Código de Termo Seleccionado: " + codigo.toUpperCase() + ". Proceda con las pestañas de Llenado, Taller o Inspección.");
-                return;
-            }
-
             document.getElementById("lbl-termo-titulo").innerHTML = codigo.toUpperCase();
             cambiarTab('tab-historial', document.getElementById('tab-btn-historial'));
             
@@ -454,19 +490,28 @@
                 if(res.estado) {
                     document.getElementById("h-cliente-anterior").innerHTML = res.clienteAnterior || 'N/A';
                     document.getElementById("h-cliente-actual").innerHTML = res.clienteActual || 'N/A';
-                    document.getElementById("h-total-llenados").innerHTML = (res.totalLlenados || 0) + " veces";
+                    document.getElementById("h-total-llenados").innerHTML = (res.llenados ? res.llenados.length : 0) + " registros";
                     document.getElementById("h-ultimo-llenado").innerHTML = res.ultimoLlenado || 'N/A';
                     
+                    // Tabla Llenados
                     let htmlLlenados = "";
                     if(!res.llenados || res.llenados.length === 0) htmlLlenados = "<tr><td colspan='4'>Sin cargas históricas.</td></tr>";
-                    else res.llenados.forEach(l => { htmlLlenados += `<tr><td>${l.fecha}</td><td>${l.presion}</td><td>${l.nivel}%</td><td>${l.operador}</td></tr>`; });
+                    else res.llenados.slice(0, 10).forEach(l => { htmlLlenados += `<tr><td>${l.fecha}</td><td>${l.presion}</td><td>${l.nivel}</td><td>${l.operador}</td></tr>`; });
                     document.getElementById("tabla-llenados").querySelector("tbody").innerHTML = htmlLlenados;
 
+                    // Tabla Taller
                     let htmlTaller = "";
-                    if(!res.mantenimientos || res.mantenimientos.length === 0) htmlTaller = "<tr><td colspan='5'>Sin reportes de daños o taller.</td></tr>";
+                    if(!res.mantenimientos || res.mantenimientos.length === 0) htmlTaller = "<tr><td colspan='5'>Sin reportes de taller.</td></tr>";
                     else res.mantenimientos.forEach(m => { htmlTaller += `<tr><td>${m.fecha}</td><td><b>${m.tipo}</b></td><td>${m.descripcion}</td><td>${m.tiempoInvertido}</td><td>${m.estado}</td></tr>`; });
                     document.getElementById("tabla-taller").querySelector("tbody").innerHTML = htmlTaller;
 
+                    // Tabla Inspecciones (NUEVO ALCANCE)
+                    let htmlInsp = "";
+                    if(!res.inspecciones || res.inspecciones.length === 0) htmlInsp = "<tr><td colspan='3'>Sin inspecciones registradas.</td></tr>";
+                    else res.inspecciones.forEach(i => { htmlInsp += `<tr><td>${i.fecha}</td><td>${i.presion}</td><td>${i.componentes}</td></tr>`; });
+                    document.getElementById("tabla-inspecciones").querySelector("tbody").innerHTML = htmlInsp;
+
+                    // Tabla Logística
                     let htmlCustodia = "";
                     if(!res.cadenaCustodia || res.cadenaCustodia.length === 0) htmlCustodia = "<tr><td colspan='3'>Sin historial logístico.</td></tr>";
                     else res.cadenaCustodia.forEach(c => { htmlCustodia += `<tr><td>${c.fecha}</td><td>${c.entidad}</td><td>${c.responsable}</td></tr>`; });
@@ -509,7 +554,7 @@
             }).catch(err => alert("Error de red: " + err.message)); 
         }
         
-        // 1. REGISTRO DE TERMOS NUEVOS
+        // ENVÍOS DE FORMULARIOS
         function registrarTermo() {
             const codigo = document.getElementById("reg-codigo").value.trim();
             if (!codigo) return alert("Ingrese el código del termo");
@@ -525,7 +570,6 @@
             enviarGenerico(d, "✅ Termo registrado con éxito", "tab-termos");
         }
 
-        // 2. REGISTRO DE LLENADO
         function registrarLlenado() {
             const codigo = document.getElementById("llenado-codigo").value.trim();
             if (!codigo) return alert("Ingrese el código del termo");
@@ -547,7 +591,6 @@
             enviarGenerico(d, "✅ Proceso de llenado guardado en Google Sheets", "tab-llenado");
         }
 
-        // 3. REGISTRO TALLER
         function registrarTaller() {
             const codigo = document.getElementById("taller-codigo").value.trim();
             if (!codigo) return alert("Ingrese el código del termo");
@@ -563,7 +606,6 @@
             enviarGenerico(d, "✅ Mantenimiento registrado con éxito", "tab-taller");
         }
 
-        // 4. REGISTRO LOGÍSTICA
         function registrarLogistica() {
             const codigo = document.getElementById("log-codigo").value.trim();
             if (!codigo) return alert("Ingrese el código del termo");
@@ -577,7 +619,6 @@
             enviarGenerico(d, "✅ Despacho logístico asignado", "tab-logistica");
         }
 
-        // 5. REGISTRO INSPECCIÓN VISUAL
         function registrarInspeccion() {
             const codigo = document.getElementById("insp-codigo").value.trim();
             if (!codigo) return alert("Ingrese el código del termo");
