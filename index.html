@@ -49,7 +49,6 @@
             position: absolute; right: 10px; top: 34px; cursor: pointer; background: none; border: none; width: auto; padding: 0; font-size: 16px; color: #666;
         }
 
-        /* HEADER & DASHBOARD */
         .header-bar { 
             background-color: var(--dark); 
             color: white; 
@@ -62,7 +61,6 @@
         .header-bar h3 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px; }
         .user-badge { background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 20px; font-size: 12px; }
 
-        /* NAVEGACIÓN POR PESTAÑAS */
         .menu-navegacion { 
             display: flex; 
             background: #fff; 
@@ -104,24 +102,11 @@
             margin-bottom: 20px; 
         }
 
-        .seccion-titulo { 
-            font-size: 13px; 
-            font-weight: bold; 
-            color: var(--primary); 
-            text-transform: uppercase; 
-            margin: 15px 0 8px 0; 
-            border-bottom: 1px dashed #ccc; 
-            padding-bottom: 4px; 
-        }
-
-        .fila-doble { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
         .grid-datos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .dato-box { background: var(--light); padding: 12px; border-radius: 6px; border-left: 4px solid var(--primary); }
         .dato-box h4 { margin: 0 0 5px 0; font-size: 11px; color: #666; text-transform: uppercase; }
         .dato-box p { margin: 0; font-size: 14px; font-weight: bold; color: var(--dark); }
 
-        /* CHECKLIST COMPONENTES */
         .checklist-box {
             max-height: 280px;
             overflow-y: auto;
@@ -136,14 +121,12 @@
 </head>
 <body>
 
-    <!-- ================= 1. LOGIN ================= -->
+    <!-- 1. LOGIN -->
     <div id="pantalla-login" class="flex-center">
         <div class="container-login">
-            <!-- LOGO VECHÍCULO Y MARCA -->
             <div class="text-center mb-2">
                 <svg width="60" height="60" viewBox="0 0 500 500">
                     <circle cx="250" cy="250" r="230" fill="#007bff"/>
-                    <path d="M 80 280 L 160 280 M 60 250 L 140 250" stroke="#ffffff" stroke-width="12" stroke-linecap="round" opacity="0.6"/>
                     <rect x="150" y="180" width="180" height="110" rx="15" fill="#ffffff"/>
                     <path d="M 330 210 L 375 210 Q 395 210 400 230 L 405 260 Q 405 290 385 290 L 330 290 Z" fill="#ffffff"/>
                     <circle cx="190" cy="290" r="24" fill="#1a1a1a"/>
@@ -154,13 +137,9 @@
             <h2 class="text-center text-primary mb-1 fw-bold">SGC - Cryofast</h2>
             <p class="text-center text-muted small mb-4">Sistema de Gestión de Criogénicos</p>
 
-            <div id="alerta-entorno" class="alert alert-warning py-2 small d-none" role="alert">
-                ⚠️ Modo de Prueba Local activado (no conectado a Sheets).
-            </div>
-
             <div class="form-group mb-3 position-relative">
                 <label for="usuario" class="form-label fw-bold small text-secondary">Usuario:</label>
-                <input type="text" id="usuario" class="form-control" placeholder="Ej. admin o jperez">
+                <input type="text" id="usuario" class="form-control" placeholder="Ej. admin">
             </div>
             <div class="form-group mb-3 position-relative">
                 <label for="clave" class="form-label fw-bold small text-secondary">Contraseña:</label>
@@ -171,10 +150,9 @@
         </div>
     </div>
 
-    <!-- ================= 2. DASHBOARD PRINCIPAL ================= -->
+    <!-- 2. DASHBOARD -->
     <div id="pantalla-dashboard" style="display:none;">
         
-        <!-- BARRA SUPERIOR CON LOGO -->
         <div class="header-bar">
             <div class="d-flex align-items-center gap-2">
                 <svg width="32" height="32" viewBox="0 0 500 500">
@@ -185,7 +163,7 @@
                     <circle cx="360" cy="290" r="24" fill="#1a1a1a"/>
                 </svg>
                 <h3 class="m-0 fw-bold fs-6">SGC - Cryofast</h3>
-                <span class="user-badge" id="badge-rol">Rol: Carga...</span>
+                <span class="user-badge" id="badge-rol">Rol: Conectado</span>
             </div>
             <div class="d-flex align-items-center gap-3">
                 <span id="nombre-usuario" class="fw-bold fs-6">Usuario</span>
@@ -193,22 +171,17 @@
             </div>
         </div>
 
-        <!-- NAVEGACIÓN -->
-        <div class="menu-navegacion" id="barra-navegacion">
+        <div class="menu-navegacion">
             <button class="menu-tab active" onclick="cambiarTab('tab-inicio', this)">📸 Escanear QR</button>
             <button class="menu-tab" onclick="cambiarTab('tab-historial', this)">📋 Historial</button>
             <button class="menu-tab" onclick="cambiarTab('tab-inspecciones', this)">📋 Inspección Visual</button>
-            <button class="menu-tab" onclick="cambiarTab('tab-termos', this)">📦 Termos</button>
-            <button class="menu-tab" onclick="cambiarTab('tab-llenado', this)">⛽ Llenado</button>
-            <button class="menu-tab" onclick="cambiarTab('tab-taller', this)">🛠️ Taller</button>
-            <button class="menu-tab" onclick="cambiarTab('tab-logistica', this)">🚚 Logística</button>
         </div>
 
-        <!-- TAB 1: ESCÁNER / CONSULTA RÁPIDA -->
+        <!-- TAB ESCÁNER -->
         <div id="tab-inicio" class="modulo-pane active">
             <div class="card-custom text-center">
                 <h4 class="fw-bold text-dark">Lector Multiformato</h4>
-                <p class="text-muted small">Escanee el código QR / Barras o ingréselo manualmente para consultar o sincronizar.</p>
+                <p class="text-muted small">Escanee el código QR o ingréselo manualmente para consultar Google Sheets.</p>
                 <button type="button" id="btn-control-camara" class="btn btn-success fw-bold px-4" onclick="alternarEscaner()">📸 Iniciar Cámara Escáner</button>
                 <div id="zona-escaneo"></div>
                 
@@ -216,11 +189,11 @@
                     <label for="codigo-detectado" class="form-label fw-bold">Código del Termo (QR / Serie):</label>
                     <input type="text" id="codigo-detectado" class="form-control text-uppercase fw-bold" maxlength="16" placeholder="Ej. T-001" oninput="sincronizarCodigos(this.value)">
                 </div>
-                <button type="button" class="btn btn-dark w-100 fw-bold mt-3 py-2" onclick="cargarHistorialDesdeBoton()">🔍 Consultar Datos de este Termo</button>
+                <button type="button" class="btn btn-dark w-100 fw-bold mt-3 py-2" onclick="cargarHistorialDesdeBoton()">🔍 Consultar Datos de Google Sheets</button>
             </div>
         </div>
 
-        <!-- TAB 2: RADIOGRAFÍA / HISTORIAL COMPLETO -->
+        <!-- TAB HISTORIAL REAL -->
         <div id="tab-historial" class="modulo-pane">
             <div class="card-custom border-top border-4 border-primary">
                 <h4 class="fw-bold mb-3">Radiografía del Termo: <span id="lbl-termo-titulo" class="text-primary">-</span></h4>
@@ -244,41 +217,17 @@
                     </div>
                 </div>
 
-                <h5 class="fw-bold mt-4 text-secondary">Últimas Cargas Realizadas</h5>
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover align-middle small" id="tabla-llenados">
-                        <thead class="table-dark"><tr><th>Fecha</th><th>PSI</th><th>Nivel %</th><th>Operador</th></tr></thead>
-                        <tbody><tr><td colspan="4" class="text-center text-muted">Seleccione un termo para consultar.</td></tr></tbody>
-                    </table>
-                </div>
-
-                <h5 class="fw-bold mt-4 text-secondary">Historial de Mantenimientos (Taller)</h5>
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover align-middle small" id="tabla-taller">
-                        <thead class="table-dark"><tr><th>Fecha</th><th>Acción</th><th>Descripción Técnica</th><th>Tiempo</th><th>Estado</th></tr></thead>
-                        <tbody><tr><td colspan="5" class="text-center text-muted">Sin registros de taller.</td></tr></tbody>
-                    </table>
-                </div>
-
                 <h5 class="fw-bold mt-4 text-secondary">Historial de Inspecciones Visuales</h5>
                 <div class="table-responsive">
                     <table class="table table-striped table-hover align-middle small" id="tabla-inspecciones">
                         <thead class="table-dark"><tr><th>Fecha</th><th>Inspector</th><th>Presión</th><th>Componentes Con Novedades</th></tr></thead>
-                        <tbody><tr><td colspan="4" class="text-center text-muted">Sin registros de inspección.</td></tr></tbody>
-                    </table>
-                </div>
-
-                <h5 class="fw-bold mt-4 text-secondary">Cadena de Custodia (Últimos Movimientos)</h5>
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover align-middle small" id="tabla-custodia">
-                        <thead class="table-dark"><tr><th>Fecha</th><th>Asignado A:</th><th>Chofer / Responsable</th></tr></thead>
-                        <tbody><tr><td colspan="3" class="text-center text-muted">Sin registros de ruta.</td></tr></tbody>
+                        <tbody><tr><td colspan="4" class="text-center text-muted">Sin registros.</td></tr></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 3: INSPECCIÓN VISUAL (23 COMPONENTES) -->
+        <!-- TAB INSPECCIÓN VISUAL -->
         <div id="tab-inspecciones" class="modulo-pane">
             <div class="card-custom">
                 <div class="bg-primary text-white p-3 rounded-top fw-bold mb-3 fs-5">
@@ -304,27 +253,8 @@
                             <div class="row g-2">
                                 <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="1. Válvula de gas" id="c1"><label class="form-check-label" for="c1">1. Válvula de gas</label></div></div>
                                 <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="2. Válvula de liquido" id="c2"><label class="form-check-label" for="c2">2. Válvula de liquido</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="3. Conexión para el llenado" id="c3"><label class="form-check-label" for="c3">3. Conexión para el llenado</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="4. Válvula elevadora de presión" id="c4"><label class="form-check-label" for="c4">4. Válvula elevadora de presión</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="5. Válvula de venteo" id="c5"><label class="form-check-label" for="c5">5. Válvula de venteo</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="6. Regulador economizador" id="c6"><label class="form-check-label" for="c6">6. Regulador economizador</label></div></div>
                                 <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="7. Manómetro" id="c7"><label class="form-check-label" for="c7">7. Manómetro</label></div></div>
                                 <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="8. Válvula de alivio" id="c8"><label class="form-check-label" for="c8">8. Válvula de alivio</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="9. Disco de Ruptura" id="c9"><label class="form-check-label" for="c9">9. Disco de Ruptura</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="10. Cyl-Tel (medidor digital)" id="c10"><label class="form-check-label" for="c10">10. Cyl-Tel (medidor digital)</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="11. Tapón válvula liquido" id="c11"><label class="form-check-label" for="c11">11. Tapón válvula liquido</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="12. Arillo Protector" id="c12"><label class="form-check-label" for="c12">12. Arillo Protector</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="13. Tapón sello garantía vacío" id="c13"><label class="form-check-label" for="c13">13. Tapón sello garantía vacío</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="14. Cuerpo termo" id="c14"><label class="form-check-label" for="c14">14. Cuerpo termo</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="15. Ruedas termo" id="c15"><label class="form-check-label" for="c15">15. Ruedas termo</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="16. Calcomonía PDAD" id="c16"><label class="form-check-label" for="c16">16. Calcomonía PDAD</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="17. Calcomonía seguridad" id="c17"><label class="form-check-label" for="c17">17. Calcomonía seguridad</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="18. Carreta" id="c18"><label class="form-check-label" for="c18">18. Carreta</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="19. Ruedas carreta" id="c19"><label class="form-check-label" for="c19">19. Ruedas carreta</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="20. Manifold" id="c20"><label class="form-check-label" for="c20">20. Manifold</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="21. Cable/conector p/equipo de transmisión" id="c21"><label class="form-check-label" for="c21">21. Cable/conector p/equipo de transmisión</label></div></div>
-                                <div class="col-md-6"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="22. Válvulas de manifold en carreta" id="c22"><label class="form-check-label" for="c22">22. Válvulas de manifold en carreta</label></div></div>
-                                <div class="col-md-12"><div class="form-check"><input class="form-check-input chk-componente" type="checkbox" value="23. Manguera regulador/Manifold" id="c23"><label class="form-check-label" for="c23">23. Manguera regulador/Manifold</label></div></div>
                             </div>
                         </div>
                     </div>
@@ -335,150 +265,18 @@
                     </div>
 
                     <button type="submit" id="btnGuardar" class="btn btn-primary w-100 mt-3 py-2 fw-bold">
-                        💾 Registrar Inspección Visual
+                        💾 Registrar en Google Sheets
                     </button>
                 </form>
             </div>
         </div>
 
-        <!-- TAB 4: REGISTRO DE TERMOS NUEVOS -->
-        <div id="tab-termos" class="modulo-pane">
-            <div class="card-custom">
-                <h4 class="fw-bold mb-3">Registro de Termo Nuevo</h4>
-                <div class="form-group mb-3">
-                    <label for="reg-codigo" class="form-label fw-semibold">Código Interno / Barras:</label>
-                    <input type="text" id="reg-codigo" class="form-control text-uppercase" maxlength="16" placeholder="Ej. T-001" oninput="sincronizarCodigos(this.value)">
-                </div>
-                <div class="form-group mb-3">
-                    <label for="reg-serie" class="form-label fw-semibold">Número de Serie (Fábrica):</label>
-                    <input type="text" id="reg-serie" class="form-control" placeholder="Ej. SN-987654">
-                </div>
-                <div class="form-group mb-3">
-                    <label for="reg-capacidad" class="form-label fw-semibold">Capacidad:</label>
-                    <select id="reg-capacidad" class="form-select">
-                        <option value="180 Litros">180 Litros</option>
-                        <option value="230 Litros">230 Litros</option>
-                        <option value="1000 Litros">1000 Litros</option>
-                        <option value="450 Libras">450 Libras</option>
-                        <option value="500 Libras">500 Libras</option>
-                    </select>
-                </div>
-                <div class="form-group mb-3">
-                    <label for="reg-gas" class="form-label fw-semibold">Producto (Gas):</label>
-                    <select id="reg-gas" class="form-select">
-                        <option value="Oxígeno (O2)">Oxígeno (O2)</option>
-                        <option value="Nitrógeno (N2)">Nitrógeno (N2)</option>
-                        <option value="Argón (Ar)">Argón (Ar)</option>
-                        <option value="Dióxido de Carbono (CO2)">Dióxido de Carbono (CO2)</option>
-                    </select>
-                </div>
-                <div class="form-group mb-3">
-                    <label for="reg-observaciones" class="form-label fw-semibold">Observaciones Iniciales:</label>
-                    <textarea id="reg-observaciones" class="form-control" rows="2" placeholder="Estado del termo al ingresar..."></textarea>
-                </div>
-                <button type="button" class="btn btn-primary w-100 fw-bold py-2" onclick="registrarTermo()">💾 Registrar Termo en Sistema</button>
-            </div>
-        </div>
-
-        <!-- TAB 5: LLENADO -->
-        <div id="tab-llenado" class="modulo-pane">
-            <div class="card-custom">
-                <h4 class="fw-bold mb-3">Registrar Proceso de Llenado</h4>
-                
-                <div class="form-group mb-3">
-                    <label for="llenado-codigo" class="form-label fw-semibold">Código del Termo:</label>
-                    <input type="text" id="llenado-codigo" class="form-control text-uppercase" maxlength="16" placeholder="Ej. T-001" oninput="sincronizarCodigos(this.value)">
-                </div>
-
-                <div class="seccion-titulo">Presiones de Operación (PSI)</div>
-                <div class="fila-doble">
-                    <div class="form-group mb-2"><label for="llenado-orca-ini" class="small fw-bold">PSI ORCA Inicio:</label><input type="number" id="llenado-orca-ini" class="form-control"></div>
-                    <div class="form-group mb-2"><label for="llenado-orca-fin" class="small fw-bold">PSI ORCA Fin:</label><input type="number" id="llenado-orca-fin" class="form-control"></div>
-                </div>
-                <div class="fila-doble">
-                    <div class="form-group mb-2"><label for="llenado-termo-ini" class="small fw-bold">PSI Termo Inicio:</label><input type="number" id="llenado-termo-ini" class="form-control"></div>
-                    <div class="form-group mb-2"><label for="llenado-termo-fin" class="small fw-bold">PSI Termo Fin:</label><input type="number" id="llenado-termo-fin" class="form-control"></div>
-                </div>
-
-                <div class="seccion-titulo">Capacidad & Volumen Líquido</div>
-                <div class="fila-doble">
-                    <div class="form-group mb-2"><label for="llenado-pct-ini" class="small fw-bold">% Inicio:</label><input type="number" id="llenado-pct-ini" class="form-control"></div>
-                    <div class="form-group mb-2"><label for="llenado-pct-fin" class="small fw-bold">% Fin:</label><input type="number" id="llenado-pct-fin" class="form-control"></div>
-                </div>
-                <div class="fila-doble">
-                    <div class="form-group mb-2"><label for="llenado-cantidad" class="small fw-bold">Cantidad Cargada:</label><input type="number" id="llenado-cantidad" class="form-control" placeholder="Lts/Gals/Lbs"></div>
-                    <div class="form-group mb-2"><label for="llenado-tiempo" class="small fw-bold">Tiempo Llenado (min):</label><input type="number" id="llenado-tiempo" class="form-control" placeholder="Ej. 15"></div>
-                </div>
-
-                <div class="seccion-titulo">Información de Control</div>
-                <div class="form-group mb-3">
-                    <label for="llenado-operador" class="form-label fw-semibold">Operador Responsable:</label>
-                    <input type="text" id="llenado-operador" class="form-control">
-                </div>
-                <div class="form-group mb-3">
-                    <label for="llenado-observaciones" class="form-label fw-semibold">Observaciones del Proceso:</label>
-                    <textarea id="llenado-observaciones" class="form-control" rows="2" placeholder="Detalles o novedades encontradas..."></textarea>
-                </div>
-
-                <button type="button" class="btn btn-success w-100 fw-bold py-2" onclick="registrarLlenado()">⚡ Confirmar Llenado</button>
-            </div>
-        </div>
-
-        <!-- TAB 6: TALLER -->
-        <div id="tab-taller" class="modulo-pane">
-            <div class="card-custom">
-                <h4 class="fw-bold mb-3">Taller & Mantenimiento</h4>
-                <div class="form-group mb-3"><label for="taller-codigo" class="form-label fw-semibold">Código del Termo:</label><input type="text" id="taller-codigo" class="form-control text-uppercase" maxlength="16" oninput="sincronizarCodigos(this.value)"></div>
-                <div class="form-group mb-3">
-                    <label for="taller-tipo" class="form-label fw-semibold">Acción:</label>
-                    <select id="taller-tipo" class="form-select">
-                        <option>Mantenimiento Preventivo Anual</option>
-                        <option>Reparación Correctiva (Fuga/Válvula)</option>
-                        <option>Prueba de Vacío</option>
-                    </select>
-                </div>
-                <div class="form-group mb-3"><label for="taller-descripcion" class="form-label fw-semibold">Detalles del Trabajo:</label><textarea id="taller-descripcion" class="form-control" rows="3"></textarea></div>
-                <div class="form-group mb-3"><label for="taller-tiempo" class="form-label fw-semibold">Tiempo en Taller:</label><input type="text" id="taller-tiempo" class="form-control" placeholder="Ej. 3 horas / 2 días"></div>
-                <div class="form-group mb-3">
-                    <label for="taller-estado" class="form-label fw-semibold">Estado del Termo:</label>
-                    <select id="taller-estado" class="form-select">
-                        <option value="Resuelto">Resuelto</option>
-                        <option value="Pendiente">Pendiente</option>
-                        <option value="Descartado">Descartado</option>
-                    </select>
-                </div>
-                <button type="button" class="btn btn-warning text-dark w-100 fw-bold py-2" onclick="registrarTaller()">🛠️ Guardar Reporte Técnico</button>
-            </div>
-        </div>
-
-        <!-- TAB 7: LOGÍSTICA -->
-        <div id="tab-logistica" class="modulo-pane">
-            <div class="card-custom">
-                <h4 class="fw-bold mb-3">Despacho / Logística</h4>
-                <div class="form-group mb-3"><label for="log-codigo" class="form-label fw-semibold">Código del Termo:</label><input type="text" id="log-codigo" class="form-control text-uppercase" maxlength="16" oninput="sincronizarCodigos(this.value)"></div>
-                <div class="form-group mb-3"><label for="log-cliente" class="form-label fw-semibold">Cliente de Destino:</label><input type="text" id="log-cliente" class="form-control"></div>
-                <div class="form-group mb-3"><label for="log-chofer" class="form-label fw-semibold">Chofer Asignado:</label><input type="text" id="log-chofer" class="form-control"></div>
-                <button type="button" class="btn btn-primary w-100 fw-bold py-2" onclick="registrarLogistica()">🚚 Confirmar Despacho</button>
-            </div>
-        </div>
-
     </div>
 
-    <!-- SCRIPT CONTROLADOR CON SOPORTE DUAL (LOCAL / WEB APP) -->
+    <!-- SCRIPT DE PRODUCCIÓN -->
     <script>
         let html5QrCode = null;
         let escanerActivo = false;
-
-        // Comprobación de entorno (Apps Script vs Local)
-        function esEntornoAppsScript() {
-            return (typeof google !== 'undefined' && google.script && google.script.run);
-        }
-
-        window.onload = function() {
-            if(!esEntornoAppsScript()) {
-                document.getElementById("alerta-entorno").classList.remove("d-none");
-            }
-        };
 
         function togglePass() {
             const el = document.getElementById("clave");
@@ -491,7 +289,6 @@
             document.getElementById("pantalla-login").style.display = "none";
             document.getElementById("pantalla-dashboard").style.display = "block";
             document.getElementById("nombre-usuario").innerText = user;
-            document.getElementById("badge-rol").innerText = "Rol: Administrador";
         }
 
         function logout() {
@@ -504,20 +301,12 @@
             document.querySelectorAll(".menu-tab").forEach(t => t.classList.remove("active"));
             document.getElementById(tabId).classList.add("active");
             if(btn) btn.classList.add("active");
-
-            if(tabId !== 'tab-inicio' && escanerActivo) {
-                alternarEscaner();
-            }
         }
 
         function sincronizarCodigos(val) {
             const codigo = val.toUpperCase().trim();
             document.getElementById("codigo-detectado").value = codigo;
             document.getElementById("codigoTermo").value = codigo;
-            document.getElementById("reg-codigo").value = codigo;
-            document.getElementById("llenado-codigo").value = codigo;
-            document.getElementById("taller-codigo").value = codigo;
-            document.getElementById("log-codigo").value = codigo;
         }
 
         function alternarEscaner() {
@@ -536,7 +325,7 @@
                         cargarHistorialDesdeBoton();
                     },
                     (errorMessage) => {}
-                ).catch(err => alert("Error al abrir la cámara: " + err));
+                ).catch(err => alert("Error al abrir cámara: " + err));
                 
                 btn.innerText = "🛑 Detener Escáner";
                 btn.className = "btn btn-danger fw-bold px-4";
@@ -553,161 +342,78 @@
             }
         }
 
-        function resetearCamposHistorial(codigo) {
-            document.getElementById("lbl-termo-titulo").innerText = codigo + " (Consultando...)";
-            document.getElementById("h-cliente-anterior").innerText = "...";
-            document.getElementById("h-cliente-actual").innerText = "...";
-            document.getElementById("h-total-llenados").innerText = "...";
-            document.getElementById("h-ultimo-llenado").innerText = "...";
-
-            document.querySelector("#tabla-llenados tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Cargando datos...</td></tr>";
-            document.querySelector("#tabla-taller tbody").innerHTML = "<tr><td colspan='5' class='text-center text-muted'>Cargando datos...</td></tr>";
-            document.querySelector("#tabla-inspecciones tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Cargando datos...</td></tr>";
-            document.querySelector("#tabla-custodia tbody").innerHTML = "<tr><td colspan='3' class='text-center text-muted'>Cargando datos...</td></tr>";
-        }
-
-        // CONSULTA DE DATOS (CON MODO DUAL AUTOMÁTICO)
+        // CONSULTA DIRECTA AL SERVIDOR GOOGLE SHEETS
         function cargarHistorialDesdeBoton() {
             const codigo = document.getElementById("codigo-detectado").value.trim().toUpperCase();
-            if(!codigo) return alert("Por favor, ingrese o escanee un código de termo.");
+            if(!codigo) return alert("Ingrese un código de termo");
             
             cambiarTab('tab-historial', document.querySelectorAll('.menu-tab')[1]);
-            resetearCamposHistorial(codigo);
+            document.getElementById("lbl-termo-titulo").innerText = codigo + " (Buscando en Google Sheets...)";
 
-            if (esEntornoAppsScript()) {
-                // Modo Producción en Google Apps Script
-                google.script.run
-                    .withSuccessHandler(renderHistorial)
-                    .withFailureHandler(err => {
-                        alert("Error al obtener datos de Sheets: " + err);
-                        resetearCamposHistorial(codigo + " (Error)");
-                    })
-                    .obtenerHistorialTermo(codigo);
-            } else {
-                // Modo Simulación Local para pruebas directas en el navegador
-                setTimeout(() => {
-                    renderHistorial({
-                        clienteAnterior: "Simulado - Cliente A",
-                        clienteActual: "Simulado - Cliente B",
-                        totalLlenados: "5 Cargas",
-                        ultimoLlenado: "Hace 2 horas",
-                        llenados: [{fecha: "22/07/2026", psi: "28", pct: "90%", operador: "Prueba Local"}],
-                        taller: [],
-                        inspecciones: [{fecha: "22/07/2026", inspector: "Tester Local", presion: "28 PSI", componentes: "Sin daños"}],
-                        custodia: []
-                    });
-                }, 400);
-            }
+            // LLAMADA DIRECTA A GOOGLE APPS SCRIPT
+            google.script.run
+                .withSuccessHandler(renderHistorial)
+                .withFailureHandler(err => {
+                    alert("Error de conexión con Google Sheets: " + err);
+                })
+                .obtenerHistorialTermo(codigo);
         }
 
         function renderHistorial(data) {
             const codigo = document.getElementById("codigo-detectado").value.trim().toUpperCase();
             document.getElementById("lbl-termo-titulo").innerText = codigo;
 
-            if(!data) {
-                document.getElementById("h-cliente-anterior").innerText = "Sin Datos";
-                document.getElementById("h-cliente-actual").innerText = "Sin Datos";
-                document.getElementById("h-total-llenados").innerText = "0";
-                document.getElementById("h-ultimo-llenado").innerText = "Sin Registro";
-                document.querySelector("#tabla-llenados tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>No se encontraron datos para este termo.</td></tr>";
-                document.querySelector("#tabla-taller tbody").innerHTML = "<tr><td colspan='5' class='text-center text-muted'>Sin registros.</td></tr>";
-                document.querySelector("#tabla-inspecciones tbody").innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Sin registros.</td></tr>";
-                document.querySelector("#tabla-custodia tbody").innerHTML = "<tr><td colspan='3' class='text-center text-muted'>Sin registros.</td></tr>";
-                return;
-            }
+            document.getElementById("h-cliente-anterior").innerText = data.clienteAnterior;
+            document.getElementById("h-cliente-actual").innerText = data.clienteActual;
+            document.getElementById("h-total-llenados").innerText = data.totalLlenados;
+            document.getElementById("h-ultimo-llenado").innerText = data.ultimoLlenado;
 
-            document.getElementById("h-cliente-anterior").innerText = data.clienteAnterior || "N/A";
-            document.getElementById("h-cliente-actual").innerText = data.clienteActual || "En Planta / Sin Asignar";
-            document.getElementById("h-total-llenados").innerText = data.totalLlenados || "0 Cargas";
-            document.getElementById("h-ultimo-llenado").innerText = data.ultimoLlenado || "Sin Registro";
-
-            // Tabla Cargas
-            let htmlLlenados = "";
-            if (data.llenados && data.llenados.length > 0) {
-                data.llenados.forEach(x => htmlLlenados += `<tr><td>${x.fecha || ''}</td><td>${x.psi || ''}</td><td>${x.pct || ''}</td><td>${x.operador || ''}</td></tr>`);
-            } else {
-                htmlLlenados = "<tr><td colspan='4' class='text-center text-muted'>Sin cargas registradas.</td></tr>";
-            }
-            document.querySelector("#tabla-llenados tbody").innerHTML = htmlLlenados;
-
-            // Tabla Taller
-            let htmlTaller = "";
-            if (data.taller && data.taller.length > 0) {
-                data.taller.forEach(x => htmlTaller += `<tr><td>${x.fecha || ''}</td><td>${x.accion || ''}</td><td>${x.desc || ''}</td><td>${x.tiempo || ''}</td><td><span class="badge bg-success">${x.estado || 'Completado'}</span></td></tr>`);
-            } else {
-                htmlTaller = "<tr><td colspan='5' class='text-center text-muted'>Sin registros de taller.</td></tr>";
-            }
-            document.querySelector("#tabla-taller tbody").innerHTML = htmlTaller;
-
-            // Tabla Inspecciones
             let htmlInsp = "";
             if (data.inspecciones && data.inspecciones.length > 0) {
-                data.inspecciones.forEach(x => htmlInsp += `<tr><td>${x.fecha || ''}</td><td>${x.inspector || ''}</td><td>${x.presion || ''}</td><td>${x.componentes || 'Sin daños'}</td></tr>`);
+                data.inspecciones.forEach(x => {
+                    htmlInsp += `<tr><td>${x.fecha}</td><td>${x.inspector}</td><td>${x.presion}</td><td>${x.componentes}</td></tr>`;
+                });
             } else {
-                htmlInsp = "<tr><td colspan='4' class='text-center text-muted'>Sin inspecciones registradas.</td></tr>";
+                htmlInsp = "<tr><td colspan='4' class='text-center text-muted'>Sin registros guardados en la hoja.</td></tr>";
             }
             document.querySelector("#tabla-inspecciones tbody").innerHTML = htmlInsp;
-
-            // Tabla Cadena Custodia
-            let htmlCust = "";
-            if (data.custodia && data.custodia.length > 0) {
-                data.custodia.forEach(x => htmlCust += `<tr><td>${x.fecha || ''}</td><td>${x.asignado || ''}</td><td>${x.chofer || ''}</td></tr>`);
-            } else {
-                htmlCust = "<tr><td colspan='3' class='text-center text-muted'>Sin historial de envíos.</td></tr>";
-            }
-            document.querySelector("#tabla-custodia tbody").innerHTML = htmlCust;
         }
 
-        // GUARDAR INSPECCIÓN CON RETROALIMENTACIÓN
+        // GUARDADO DIRECTO EN GOOGLE SHEETS
         function guardarInspeccion(event) {
             event.preventDefault();
             const btn = document.getElementById("btnGuardar");
             btn.disabled = true;
-            btn.innerText = "Guardando...";
+            btn.innerText = "Guardando en Google Sheets...";
 
             let seleccionados = [];
             document.querySelectorAll(".chk-componente:checked").forEach(cb => seleccionados.push(cb.value));
-            let resultadoComponentes = seleccionados.length > 0 ? seleccionados.join(", ") : "Sin daños reportados";
 
             let payload = {
                 codigo: document.getElementById("codigoTermo").value.trim().toUpperCase(),
                 presion: document.getElementById("presionPSI").value,
-                componentes: resultadoComponentes,
+                componentes: seleccionados.length > 0 ? seleccionados.join(", ") : "Sin novedades",
                 observaciones: document.getElementById("observaciones").value.trim() || "Sin observaciones",
-                inspector: document.getElementById("nombre-usuario").innerText || "Inspector"
+                inspector: document.getElementById("nombre-usuario").innerText
             };
 
-            if (esEntornoAppsScript()) {
-                google.script.run
-                    .withSuccessHandler(res => {
-                        btn.disabled = false;
-                        btn.innerText = "💾 Registrar Inspección Visual";
-                        alert("✅ Guardado en Google Sheets correctamente.");
-                        document.getElementById("formInspeccion").reset();
-                    })
-                    .withFailureHandler(err => {
-                        btn.disabled = false;
-                        btn.innerText = "💾 Registrar Inspección Visual";
-                        alert("Error al guardar: " + err);
-                    })
-                    .registrarInspeccion(payload);
-            } else {
-                setTimeout(() => {
+            // GUARDA DIRECTAMENTE EN LA HOJA DE GOOGLE
+            google.script.run
+                .withSuccessHandler(res => {
                     btn.disabled = false;
-                    btn.innerText = "💾 Registrar Inspección Visual";
-                    alert("Modo Local: Inspección registrada ficticiamente. Para guardar en la hoja real, abre la App desde el link de Google Apps Script.");
+                    btn.innerText = "💾 Registrar en Google Sheets";
+                    alert("✅ ¡ÉXITO! La inspección ha sido guardada en tu hoja de Google Sheets.");
                     document.getElementById("formInspeccion").reset();
-                }, 300);
-            }
+                })
+                .withFailureHandler(err => {
+                    btn.disabled = false;
+                    btn.innerText = "💾 Registrar en Google Sheets";
+                    alert("❌ Error al guardar en Google Sheets: " + err);
+                })
+                .registrarInspeccion(payload);
         }
-
-        function registrarTermo() { alert("Acción procesada."); }
-        function registrarLlenado() { alert("Acción procesada."); }
-        function registrarTaller() { alert("Acción procesada."); }
-        function registrarLogistica() { alert("Acción procesada."); }
     </script>
 
-    <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
