@@ -299,7 +299,7 @@
                 <div class="form-group"><label for="insp-codigo">Código del Termo:</label><input type="text" id="insp-codigo" maxlength="16"></div>
                 <div class="form-group"><label for="insp-presion">Presión Actual (PSI):</label><input type="number" id="insp-presion"></div>
                 
-                <label style="margin-top: 15px; margin-bottom: 8px;">MARQUE UNICAMENTE EL EQUIPO DAÑADO:</label>
+                <label style="margin-top: 15px; margin-bottom: 8px;">MARQUE ÚNICAMENTE EL EQUIPO DAÑADO:</label>
                 <div class="checklist-container" id="contenedor-componentes">
                     <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Válvula de gas"> 1. Válvula de gas</label>
                     <label class="checklist-item"><input type="checkbox" class="comp-danado" value="Válvula de liquido"> 2. Válvula de liquido</label>
@@ -413,6 +413,13 @@
             cambiarTab('tab-inicio', document.getElementById('tab-btn-inicio'));
         }
 
+        function cambiarTab(idTab, btn) {
+            document.querySelectorAll('.modulo-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(idTab).classList.add('active');
+            if(btn) btn.classList.add('active');
+        }
+
         function alternarEscaner() {
             const zona = document.getElementById("zona-escaneo"); 
             const btn = document.getElementById("btn-control-camara");
@@ -420,7 +427,6 @@
                 zona.style.display = "block"; btn.innerHTML = "🛑 Detener Cámara"; btn.style.backgroundColor = "var(--danger)";
                 html5QrcodeScanner = new Html5Qrcode("zona-escaneo");
                 
-                // Habilitado para leer QR y Códigos de Barras nativamente
                 html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 180 } },
                     (texto) => {
                         sincronizarCodigos(texto.trim()); 
@@ -500,137 +506,117 @@
                     // Tabla Inspecciones
                     let htmlInsp = "";
                     if(!res.inspecciones || res.inspecciones.length === 0) htmlInsp = "<tr><td colspan='4'>Sin inspecciones registradas.</td></tr>";
-                    else res.inspecciones.forEach(i => { htmlInsp += `<tr><td>${i.fecha}</td><td>${i.inspector}</td><td>${i.resultado}</td><td>${i.observaciones}</td></tr>`; });
+                    else res.inspecciones.forEach(i => { htmlInsp += `<tr><td>${i.fecha}</td><td>${i.inspector}</td><td>${i.presion} PSI</td><td>${i.detalles}</td></tr>`; });
                     document.getElementById("tabla-inspecciones").querySelector("tbody").innerHTML = htmlInsp;
 
-                    // Tabla Custodia
-                    let htmlCustodia = "";
-                    if(!res.cadenaCustodia || res.cadenaCustodia.length === 0) htmlCustodia = "<tr><td colspan='3'>Sin historial logístico.</td></tr>";
-                    else res.cadenaCustodia.forEach(c => { htmlCustodia += `<tr><td>${c.fecha}</td><td>${c.entidad}</td><td>${c.responsable}</td></tr>`; });
-                    document.getElementById("tabla-custodia").querySelector("tbody").innerHTML = htmlCustodia;
-                }
-            }).catch(err => alert("Error cargando historial: " + err.message));
+                    // Tabla Cadena Custodia
+                    let htmlCust = "";
+                    if(!res.custodia || res.custodia.length === 0) htmlCust = "<tr><td colspan='3'>Sin registros de ruta.</td></tr>";
+                    else res.custodia.forEach(c => { htmlCust += `<tr><td>${c.fecha}</td><td>${c.cliente}</td><td>${c.chofer}</td></tr>`; });
+                    document.getElementById("tabla-custodia").querySelector("tbody").innerHTML = htmlCust;
+
+                } else { alert("Atención: " + res.mensaje); }
+            }).catch(err => alert("Error al conectar con la base de datos: " + err.message));
         }
 
-        function cambiarTab(idTab, boton) {
-            const paneles = document.getElementsByClassName("modulo-pane");
-            for (let i = 0; i < paneles.length; i++) paneles[i].classList.remove("active");
-            const tabs = document.getElementsByClassName("menu-tab");
-            for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
-            document.getElementById(idTab).classList.add("active");
-            if (boton) boton.classList.add("active");
-            if (idTab !== 'tab-inicio') detenerEscanerEfectivo();
-        }
-
-        function cerrarSesion(){ 
-            detenerEscanerEfectivo(); 
-            localStorage.clear(); 
-            document.getElementById("pantalla-dashboard").style.display = "none"; 
-            document.getElementById("pantalla-login").style.display = "flex"; 
-        }
-        
-        function enviarGenerico(dataForm, successMsg, idTabLimpieza) { 
-            fetch(API_URL, { method: "POST", body: dataForm })
+        function enviarSolicitudAPI(params, mensajeExito) {
+            fetch(API_URL, { method: "POST", body: params })
             .then(res => res.json())
-            .then(data => { 
-                if(data.estado) { 
-                    alert(successMsg); 
-                    if(idTabLimpieza) {
-                        const inputs = document.querySelectorAll(`#${idTabLimpieza} input:not([readonly])`);
-                        inputs.forEach(i => i.value = "");
-                        const textareas = document.querySelectorAll(`#${idTabLimpieza} textarea`);
-                        textareas.forEach(t => t.value = "");
-                    }
-                } else alert("Error: " + data.mensaje); 
-            }).catch(err => alert("Error de red: " + err.message)); 
+            .then(d => {
+                if(d.estado) { alert(mensajeExito); }
+                else { alert("Error: " + d.mensaje); }
+            })
+            .catch(e => alert("Error de conexión: " + e.message));
         }
-        
+
         function registrarTermo() {
-            const codigo = document.getElementById("reg-codigo").value.trim();
-            const serie = document.getElementById("reg-serie").value.trim();
-            const capacidad = document.getElementById("reg-capacidad").value;
-            const gas = document.getElementById("reg-gas").value;
-            const obs = document.getElementById("reg-observaciones").value.trim();
+            const cod = document.getElementById("reg-codigo").value.trim();
+            if(!cod) return alert("Ingrese el código del termo.");
+            
+            const p = new URLSearchParams();
+            p.append("action", "registrarTermo");
+            p.append("codigo", cod);
+            p.append("serie", document.getElementById("reg-serie").value.trim());
+            p.append("capacidad", document.getElementById("reg-capacidad").value);
+            p.append("gas", document.getElementById("reg-gas").value);
+            p.append("observaciones", document.getElementById("reg-observaciones").value.trim());
 
-            if (!codigo || !serie) return alert("Código y Serie son requeridos.");
-
-            const d = new URLSearchParams();
-            d.append("action", "registrarTermo");
-            d.append("codigo", codigo);
-            d.append("serie", serie);
-            d.append("capacidad", capacidad);
-            d.append("gas", gas);
-            d.append("observaciones", obs);
-
-            enviarGenerico(d, "Termo registrado exitosamente.", "tab-termos");
+            enviarSolicitudAPI(p, "Termo registrado correctamente.");
         }
 
         function registrarLlenado() {
-            const codigo = document.getElementById("llenado-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo.");
+            const cod = document.getElementById("llenado-codigo").value.trim();
+            if(!cod) return alert("Ingrese el código del termo.");
 
-            const d = new URLSearchParams();
-            d.append("action", "registrarLlenado");
-            d.append("codigo", codigo);
-            d.append("orcaIni", document.getElementById("llenado-orca-ini").value);
-            d.append("orcaFin", document.getElementById("llenado-orca-fin").value);
-            d.append("termoIni", document.getElementById("llenado-termo-ini").value);
-            d.append("termoFin", document.getElementById("llenado-termo-fin").value);
-            d.append("pctIni", document.getElementById("llenado-pct-ini").value);
-            d.append("pctFin", document.getElementById("llenado-pct-fin").value);
-            d.append("cantidad", document.getElementById("llenado-cantidad").value);
-            d.append("tiempo", document.getElementById("llenado-tiempo").value);
-            d.append("operador", document.getElementById("llenado-operador").value);
-            d.append("observaciones", document.getElementById("llenado-observaciones").value);
+            const p = new URLSearchParams();
+            p.append("action", "registrarLlenado");
+            p.append("codigo", cod);
+            p.append("orcaIni", document.getElementById("llenado-orca-ini").value);
+            p.append("orcaFin", document.getElementById("llenado-orca-fin").value);
+            p.append("termoIni", document.getElementById("llenado-termo-ini").value);
+            p.append("termoFin", document.getElementById("llenado-termo-fin").value);
+            p.append("pctIni", document.getElementById("llenado-pct-ini").value);
+            p.append("pctFin", document.getElementById("llenado-pct-fin").value);
+            p.append("cantidad", document.getElementById("llenado-cantidad").value);
+            p.append("tiempo", document.getElementById("llenado-tiempo").value);
+            p.append("operador", document.getElementById("llenado-operador").value);
+            p.append("observaciones", document.getElementById("llenado-observaciones").value.trim());
 
-            enviarGenerico(d, "Llenado registrado correctamente.", "tab-llenado");
+            enviarSolicitudAPI(p, "Llenado registrado con éxito.");
         }
 
         function registrarTaller() {
-            const codigo = document.getElementById("taller-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo.");
+            const cod = document.getElementById("taller-codigo").value.trim();
+            if(!cod) return alert("Ingrese el código del termo.");
 
-            const d = new URLSearchParams();
-            d.append("action", "registrarTaller");
-            d.append("codigo", codigo);
-            d.append("tipo", document.getElementById("taller-tipo").value);
-            d.append("descripcion", document.getElementById("taller-descripcion").value);
-            d.append("tiempo", document.getElementById("taller-tiempo").value);
-            d.append("estado", document.getElementById("taller-estado").value);
-            d.append("operador", localStorage.getItem("nombre") || "Técnico");
+            const p = new URLSearchParams();
+            p.append("action", "registrarTaller");
+            p.append("codigo", cod);
+            p.append("tipo", document.getElementById("taller-tipo").value);
+            p.append("descripcion", document.getElementById("taller-descripcion").value.trim());
+            p.append("tiempo", document.getElementById("taller-tiempo").value.trim());
+            p.append("estado", document.getElementById("taller-estado").value);
 
-            enviarGenerico(d, "Reporte técnico guardado con éxito.", "tab-taller");
+            enviarSolicitudAPI(p, "Reporte técnico guardado.");
         }
 
         function registrarLogistica() {
-            const codigo = document.getElementById("log-codigo").value.trim();
-            const cliente = document.getElementById("log-cliente").value.trim();
-            if (!codigo || !cliente) return alert("Código y Cliente son requeridos.");
+            const cod = document.getElementById("log-codigo").value.trim();
+            if(!cod) return alert("Ingrese el código del termo.");
 
-            const d = new URLSearchParams();
-            d.append("action", "registrarLogistica");
-            d.append("codigo", codigo);
-            d.append("cliente", cliente);
-            d.append("chofer", document.getElementById("log-chofer").value);
+            const p = new URLSearchParams();
+            p.append("action", "registrarLogistica");
+            p.append("codigo", cod);
+            p.append("cliente", document.getElementById("log-cliente").value.trim());
+            p.append("chofer", document.getElementById("log-chofer").value.trim());
 
-            enviarGenerico(d, "Despacho asignado con éxito.", "tab-logistica");
+            enviarSolicitudAPI(p, "Despacho registrado correctamente.");
         }
 
         function registrarInspeccion() {
-            const codigo = document.getElementById("insp-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo.");
+            const cod = document.getElementById("insp-codigo").value.trim();
+            if(!cod) return alert("Ingrese el código del termo.");
 
-            const checkboxes = document.querySelectorAll("#contenedor-componentes .comp-danado:checked");
-            const danados = Array.from(checkboxes).map(c => c.value);
+            const seleccionados = Array.from(document.querySelectorAll('.comp-danado:checked')).map(cb => cb.value);
+            const novedades = seleccionados.length > 0 ? seleccionados.join(", ") : "Ninguna (OK)";
 
-            const d = new URLSearchParams();
-            d.append("action", "registrarInspeccion");
-            d.append("codigo", codigo);
-            d.append("presion", document.getElementById("insp-presion").value);
-            d.append("danos", danados.length > 0 ? danados.join(", ") : "Sin novedades");
-            d.append("inspector", localStorage.getItem("nombre") || "Inspector");
+            const p = new URLSearchParams();
+            p.append("action", "registrarInspeccion");
+            p.append("codigo", cod);
+            p.append("presion", document.getElementById("insp-presion").value);
+            p.append("inspector", localStorage.getItem("nombre") || "Técnico");
+            p.append("novedades", novedades);
 
-            enviarGenerico(d, "Inspección registrada con éxito.", "tab-inspecciones");
+            enviarSolicitudAPI(p, "Inspección guardada.");
+        }
+
+        function cerrarSesion() {
+            localStorage.clear();
+            detenerEscanerEfectivo();
+            document.getElementById("pantalla-dashboard").style.display = "none";
+            document.getElementById("pantalla-login").style.display = "flex";
+            document.getElementById("usuario").value = "";
+            document.getElementById("clave").value = "";
         }
     </script>
 </body>
