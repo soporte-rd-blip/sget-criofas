@@ -505,134 +505,126 @@
                     else res.mantenimientos.forEach(m => { htmlTaller += `<tr><td>${m.fecha}</td><td><b>${m.tipo}</b></td><td>${m.descripcion}</td><td>${m.tiempoInvertido}</td><td>${m.estado}</td></tr>`; });
                     document.getElementById("tabla-taller").querySelector("tbody").innerHTML = htmlTaller;
 
-                    // Tabla Inspecciones (NUEVO ALCANCE)
+                    // Tabla Inspecciones
                     let htmlInsp = "";
                     if(!res.inspecciones || res.inspecciones.length === 0) htmlInsp = "<tr><td colspan='3'>Sin inspecciones registradas.</td></tr>";
-                    else res.inspecciones.forEach(i => { htmlInsp += `<tr><td>${i.fecha}</td><td>${i.presion}</td><td>${i.componentes}</td></tr>`; });
+                    else res.inspecciones.forEach(i => { htmlInsp += `<tr><td>${i.fecha}</td><td>${i.presion} PSI</td><td>${i.componentes}</td></tr>`; });
                     document.getElementById("tabla-inspecciones").querySelector("tbody").innerHTML = htmlInsp;
 
-                    // Tabla Logística
+                    // Tabla Logística / Custodia
                     let htmlCustodia = "";
-                    if(!res.cadenaCustodia || res.cadenaCustodia.length === 0) htmlCustodia = "<tr><td colspan='3'>Sin historial logístico.</td></tr>";
-                    else res.cadenaCustodia.forEach(c => { htmlCustodia += `<tr><td>${c.fecha}</td><td>${c.entidad}</td><td>${c.responsable}</td></tr>`; });
+                    if(!res.custodia || res.custodia.length === 0) htmlCustodia = "<tr><td colspan='3'>Sin registros de ruta.</td></tr>";
+                    else res.custodia.forEach(c => { htmlCustodia += `<tr><td>${c.fecha}</td><td>${c.cliente}</td><td>${c.chofer}</td></tr>`; });
                     document.getElementById("tabla-custodia").querySelector("tbody").innerHTML = htmlCustodia;
+
+                } else {
+                    alert(res.mensaje || "No se encontraron datos para este código.");
                 }
-            }).catch(err => alert("Error cargando historial: " + err.message));
+            })
+            .catch(err => alert("Error al obtener datos: " + err.message));
         }
 
-        function cambiarTab(idTab, boton) {
-            const paneles = document.getElementsByClassName("modulo-pane");
-            for (let i = 0; i < paneles.length; i++) paneles[i].classList.remove("active");
-            const tabs = document.getElementsByClassName("menu-tab");
-            for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
+        function cambiarTab(idTab, btn) {
+            document.querySelectorAll(".modulo-pane").forEach(pane => pane.classList.remove("active"));
+            document.querySelectorAll(".menu-tab").forEach(tab => tab.classList.remove("active"));
             
             document.getElementById(idTab).classList.add("active");
-            if (boton) boton.classList.add("active");
-            if (idTab !== 'tab-inicio') detenerEscanerEfectivo();
+            if(btn) btn.classList.add("active");
         }
 
-        function cerrarSesion(){ 
-            detenerEscanerEfectivo(); 
-            localStorage.clear(); 
-            document.getElementById("pantalla-dashboard").style.display = "none"; 
-            document.getElementById("pantalla-login").style.display = "flex"; 
-        }
-        
-        function enviarGenerico(dataForm, successMsg, idTabLimpieza) { 
-            fetch(API_URL, { method: "POST", body: dataForm })
+        // FUNCIONES DE ENVÍO DE FORMULARIOS AL SERVIDOR
+
+        function enviarFormulario(accion, datos) {
+            const bodyParams = new URLSearchParams();
+            bodyParams.append("action", accion);
+            for (let key in datos) {
+                bodyParams.append(key, datos[key]);
+            }
+
+            fetch(API_URL, { method: "POST", body: bodyParams })
             .then(res => res.json())
-            .then(data => { 
-                if(data.estado) { 
-                    alert(successMsg); 
-                    if(idTabLimpieza) {
-                        const inputs = document.querySelectorAll(`#${idTabLimpieza} input:not([readonly])`);
-                        inputs.forEach(i => i.value = "");
-                        const textareas = document.querySelectorAll(`#${idTabLimpieza} textarea`);
-                        textareas.forEach(t => t.value = "");
-                    }
-                } else alert("Error: " + data.mensaje); 
-            }).catch(err => alert("Error de red: " + err.message)); 
+            .then(res => {
+                alert(res.mensaje || (res.estado ? "Guardado con éxito" : "Ocurrió un error"));
+                if(res.estado) {
+                    solicitarHistorialServidor(datos.codigo);
+                }
+            })
+            .catch(err => alert("Error de red: " + err.message));
         }
-        
-        // ENVÍOS DE FORMULARIOS
+
         function registrarTermo() {
             const codigo = document.getElementById("reg-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo");
-
-            const d = new URLSearchParams();
-            d.append("action", "registrarTermo");
-            d.append("codigo", codigo);
-            d.append("serie", document.getElementById("reg-serie").value);
-            d.append("capacidad", document.getElementById("reg-capacidad").value);
-            d.append("gas", document.getElementById("reg-gas").value);
-            d.append("observaciones", document.getElementById("reg-observaciones").value);
-
-            enviarGenerico(d, "✅ Termo registrado con éxito", "tab-termos");
+            if(!codigo) return alert("Ingrese el código del termo.");
+            
+            enviarFormulario("registrarTermo", {
+                codigo: codigo,
+                serie: document.getElementById("reg-serie").value.trim(),
+                capacidad: document.getElementById("reg-capacidad").value,
+                gas: document.getElementById("reg-gas").value,
+                observaciones: document.getElementById("reg-observaciones").value.trim()
+            });
         }
 
         function registrarLlenado() {
             const codigo = document.getElementById("llenado-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo");
+            if(!codigo) return alert("Ingrese el código del termo.");
 
-            const d = new URLSearchParams();
-            d.append("action", "registrarLlenado");
-            d.append("codigo", codigo);
-            d.append("orcaIni", document.getElementById("llenado-orca-ini").value);
-            d.append("orcaFin", document.getElementById("llenado-orca-fin").value);
-            d.append("termoIni", document.getElementById("llenado-termo-ini").value);
-            d.append("termoFin", document.getElementById("llenado-termo-fin").value);
-            d.append("pctIni", document.getElementById("llenado-pct-ini").value);
-            d.append("pctFin", document.getElementById("llenado-pct-fin").value);
-            d.append("cantidad", document.getElementById("llenado-cantidad").value);
-            d.append("tiempo", document.getElementById("llenado-tiempo").value);
-            d.append("operador", document.getElementById("llenado-operador").value);
-            d.append("observaciones", document.getElementById("llenado-observaciones").value);
-
-            enviarGenerico(d, "✅ Proceso de llenado guardado en Google Sheets", "tab-llenado");
+            enviarFormulario("registrarLlenado", {
+                codigo: codigo,
+                orcaIni: document.getElementById("llenado-orca-ini").value,
+                orcaFin: document.getElementById("llenado-orca-fin").value,
+                termoIni: document.getElementById("llenado-termo-ini").value,
+                termoFin: document.getElementById("llenado-termo-fin").value,
+                pctIni: document.getElementById("llenado-pct-ini").value,
+                pctFin: document.getElementById("llenado-pct-fin").value,
+                cantidad: document.getElementById("llenado-cantidad").value,
+                tiempo: document.getElementById("llenado-tiempo").value,
+                operador: document.getElementById("llenado-operador").value,
+                observaciones: document.getElementById("llenado-observaciones").value
+            });
         }
 
         function registrarTaller() {
             const codigo = document.getElementById("taller-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo");
+            if(!codigo) return alert("Ingrese el código del termo.");
 
-            const d = new URLSearchParams();
-            d.append("action", "registrarTaller");
-            d.append("codigo", codigo);
-            d.append("tipo", document.getElementById("taller-tipo").value);
-            d.append("descripcion", document.getElementById("taller-descripcion").value);
-            d.append("tiempo", document.getElementById("taller-tiempo").value);
-            d.append("estado", document.getElementById("taller-estado").value);
-
-            enviarGenerico(d, "✅ Mantenimiento registrado con éxito", "tab-taller");
+            enviarFormulario("registrarTaller", {
+                codigo: codigo,
+                tipo: document.getElementById("taller-tipo").value,
+                descripcion: document.getElementById("taller-descripcion").value,
+                tiempo: document.getElementById("taller-tiempo").value,
+                estado: document.getElementById("taller-estado").value
+            });
         }
 
         function registrarLogistica() {
             const codigo = document.getElementById("log-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo");
+            if(!codigo) return alert("Ingrese el código del termo.");
 
-            const d = new URLSearchParams();
-            d.append("action", "registrarLogistica");
-            d.append("codigo", codigo);
-            d.append("cliente", document.getElementById("log-cliente").value);
-            d.append("chofer", document.getElementById("log-chofer").value);
-
-            enviarGenerico(d, "✅ Despacho logístico asignado", "tab-logistica");
+            enviarFormulario("registrarLogistica", {
+                codigo: codigo,
+                cliente: document.getElementById("log-cliente").value,
+                chofer: document.getElementById("log-chofer").value
+            });
         }
 
         function registrarInspeccion() {
             const codigo = document.getElementById("insp-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo");
+            if(!codigo) return alert("Ingrese el código del termo.");
 
-            let seleccionados = [];
-            document.querySelectorAll(".comp-danado:checked").forEach(c => seleccionados.push(c.value));
+            const dañados = [];
+            document.querySelectorAll(".comp-danado:checked").forEach(ch => dañados.push(ch.value));
 
-            const d = new URLSearchParams();
-            d.append("action", "registrarInspeccion");
-            d.append("codigo", codigo);
-            d.append("presion", document.getElementById("insp-presion").value);
-            d.append("componentes", seleccionados.length > 0 ? seleccionados.join(", ") : "Sin novedades");
+            enviarFormulario("registrarInspeccion", {
+                codigo: codigo,
+                presion: document.getElementById("insp-presion").value,
+                componentes: dañados.join(", ") || "Ninguno (OK)"
+            });
+        }
 
-            enviarGenerico(d, "✅ Inspección enviada a Google Sheets", "tab-inspecciones");
+        function cerrarSesion() {
+            localStorage.clear();
+            location.reload();
         }
     </script>
 </body>
