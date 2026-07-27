@@ -9,7 +9,7 @@
         :root {
             --primary: #0284c7;
             --primary-hover: #0369a1;
-            --primary-light: rgba(2, 132, 199, 0.1);
+            --primary-light: rgba(2, 132, 199, 0.15);
             --secondary: #475569;
             --success: #10b981;
             --danger: #ef4444;
@@ -17,6 +17,7 @@
             --dark-bg: #0f172a;
             --dark-card: #1e293b;
             --border-color: #334155;
+            --border-bright: #475569;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --input-bg: #0f172a;
@@ -137,37 +138,66 @@
         }
         .toggle-pwd:hover { opacity: 1; }
 
-        /* BUTTONS */
+        /* BUTTONS (ESTILO UNIFICADO Y MEJORADO) */
         .btn {
             width: 100%;
-            padding: 12px 16px;
+            padding: 12px 18px;
             background-color: var(--primary);
-            color: white;
-            border: none;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: 0.3px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+            user-select: none;
         }
 
-        .btn:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
-        .btn:active { transform: translateY(0); }
-        .btn-success { background-color: var(--success); }
-        .btn-success:hover { background-color: #059669; }
-        .btn-danger { background-color: var(--danger); }
-        .btn-danger:hover { background-color: #dc2626; }
-        .btn-warning { background-color: var(--warning); color: #0f172a; }
-        .btn-warning:hover { background-color: #d97706; }
-        .btn-secondary { background-color: var(--secondary); }
-        .btn-secondary:hover { background-color: #334155; }
+        .btn:hover { 
+            background-color: var(--primary-hover); 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px -2px rgba(2, 132, 199, 0.4);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
 
-        /* HEADER & NAVIGATION */
+        .btn:active { 
+            transform: translateY(1px); 
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.4);
+            filter: brightness(0.9);
+        }
+
+        .btn-success { background-color: var(--success); }
+        .btn-success:hover { 
+            background-color: #059669; 
+            box-shadow: 0 6px 12px -2px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger { background-color: var(--danger); }
+        .btn-danger:hover { 
+            background-color: #dc2626; 
+            box-shadow: 0 6px 12px -2px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-warning { background-color: var(--warning); color: #0f172a; }
+        .btn-warning:hover { 
+            background-color: #d97706; 
+            color: #ffffff;
+            box-shadow: 0 6px 12px -2px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-secondary { background-color: var(--secondary); }
+        .btn-secondary:hover { 
+            background-color: #334155; 
+            box-shadow: 0 6px 12px -2px rgba(71, 85, 105, 0.4);
+        }
+
+        /* HEADER & NAVIGATION (MENÚ REMARCADO) */
         .app-header {
             background-color: var(--dark-card);
             border-bottom: 1px solid var(--border-color);
@@ -205,35 +235,50 @@
             letter-spacing: 0.5px;
         }
 
+        /* BARRA DE NAVEGACIÓN MEJORADA CON BORDES Y EFECTOS */
         .menu-navegacion {
             display: flex;
-            background: #162032;
-            border-bottom: 1px solid var(--border-color);
-            padding: 0 16px;
+            gap: 8px;
+            background: #111827;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 2px solid var(--border-color);
+            padding: 10px 16px;
             overflow-x: auto;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
         }
 
         .menu-tab {
-            padding: 14px 20px;
-            background: none;
-            border: none;
+            padding: 10px 18px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             color: var(--text-muted);
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            border-bottom: 2px solid transparent;
             white-space: nowrap;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
+        /* Hover en pestañas */
         .menu-tab:hover {
-            color: var(--text-main);
+            color: #ffffff;
+            background-color: rgba(2, 132, 199, 0.2);
+            border-color: #38bdf8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
 
+        /* Estado activo en pestañas */
         .menu-tab.active {
-            color: #38bdf8;
-            border-bottom-color: #38bdf8;
-            background: rgba(2, 132, 199, 0.05);
+            color: #ffffff;
+            background: var(--primary);
+            border-color: #38bdf8;
+            box-shadow: 0 0 10px rgba(2, 132, 199, 0.5);
+            font-weight: 700;
         }
 
         /* MAIN DASHBOARD LAYOUT */
@@ -443,6 +488,7 @@
             </div>
         </header>
 
+        <!-- MENU REMARCADO CON NAVEGACIÓN MEJORADA -->
         <nav class="menu-navegacion" id="barra-navegacion">
             <button class="menu-tab active" onclick="cambiarTab('tab-inicio', this)" id="tab-btn-inicio">📸 Escanear QR/Barra</button>
             <button class="menu-tab" onclick="cambiarTab('tab-historial', this)" id="tab-btn-historial">📋 Historial</button>
@@ -806,19 +852,19 @@
             document.getElementById("tab-btn-inspecciones").style.display = "none";
 
             if (r === "consultor") {
-                document.getElementById("tab-btn-historial").style.display = "block";
+                document.getElementById("tab-btn-historial").style.display = "flex";
             } else if (r === "tecnico" || r === "taller" || r === "produccion") {
-                document.getElementById("tab-btn-historial").style.display = "block";
-                document.getElementById("tab-btn-llenado").style.display = "block";
-                document.getElementById("tab-btn-taller").style.display = "block";
-                document.getElementById("tab-btn-inspecciones").style.display = "block";
+                document.getElementById("tab-btn-historial").style.display = "flex";
+                document.getElementById("tab-btn-llenado").style.display = "flex";
+                document.getElementById("tab-btn-taller").style.display = "flex";
+                document.getElementById("tab-btn-inspecciones").style.display = "flex";
             } else {
-                document.getElementById("tab-btn-historial").style.display = "block";
-                document.getElementById("tab-btn-termos").style.display = "block";
-                document.getElementById("tab-btn-llenado").style.display = "block";
-                document.getElementById("tab-btn-taller").style.display = "block";
-                document.getElementById("tab-btn-logistica").style.display = "block";
-                document.getElementById("tab-btn-inspecciones").style.display = "block";
+                document.getElementById("tab-btn-historial").style.display = "flex";
+                document.getElementById("tab-btn-termos").style.display = "flex";
+                document.getElementById("tab-btn-llenado").style.display = "flex";
+                document.getElementById("tab-btn-taller").style.display = "flex";
+                document.getElementById("tab-btn-logistica").style.display = "flex";
+                document.getElementById("tab-btn-inspecciones").style.display = "flex";
             }
 
             cambiarTab('tab-inicio', document.getElementById('tab-btn-inicio'));
