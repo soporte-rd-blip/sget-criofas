@@ -771,245 +771,225 @@
         document.addEventListener("DOMContentLoaded", () => {
             const rolGuardado = localStorage.getItem("rol");
             const nombreGuardado = localStorage.getItem("nombre");
+
             if (rolGuardado && nombreGuardado) {
-                iniciarSesionUI(nombreGuardado, rolGuardado);
+                mostrarDashboard(nombreGuardado, rolGuardado);
             }
         });
 
+        // Alternar Visibilidad de Contraseña
         function alternarVisibilidadPassword() {
-            const inputClave = document.getElementById("clave");
-            inputClave.type = inputClave.type === "password" ? "text" : "password";
+            const pwdInput = document.getElementById("clave");
+            pwdInput.type = pwdInput.type === "password" ? "text" : "password";
         }
 
+        // Sistema de Login
         async function login() {
             const usuario = document.getElementById("usuario").value.trim();
             const clave = document.getElementById("clave").value.trim();
-            const btn = document.getElementById("btn-login");
+            const btnLogin = document.getElementById("btn-login");
 
             if (!usuario || !clave) {
-                alert("Por favor ingrese usuario y contraseña");
+                alert("Por favor complete todos los campos");
                 return;
             }
 
-            btn.disabled = true;
-            btn.innerText = "Verificando...";
+            btnLogin.disabled = true;
+            btnLogin.innerText = "Cargando...";
 
             try {
                 const response = await fetch(`${API_URL}?action=login&usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`);
-                const res = await response.json();
+                const data = await response.json();
 
-                if (res.status === "success") {
-                    localStorage.setItem("nombre", res.nombre || usuario);
-                    localStorage.setItem("rol", res.rol || "Operador");
-                    iniciarSesionUI(res.nombre || usuario, res.rol || "Operador");
+                if (data.status === "success") {
+                    localStorage.setItem("rol", data.rol);
+                    localStorage.setItem("nombre", data.nombre);
+                    mostrarDashboard(data.nombre, data.rol);
                 } else {
-                    alert("Credenciales incorrectas: " + (res.message || "Acceso denegado"));
+                    alert(data.message || "Usuario o contraseña incorrectos");
                 }
             } catch (err) {
-                alert("Error de conexión con el servidor.");
                 console.error(err);
+                alert("Error conectando con el servidor");
             } finally {
-                btn.disabled = false;
-                btn.innerText = "Ingresar al Sistema";
+                btnLogin.disabled = false;
+                btnLogin.innerText = "Ingresar al Sistema";
             }
         }
 
-        function iniciarSesionUI(nombre, rol) {
+        function mostrarDashboard(nombre, rol) {
             document.getElementById("pantalla-login").style.display = "none";
             document.getElementById("pantalla-dashboard").style.display = "block";
             document.getElementById("nombre-usuario").innerText = nombre;
             document.getElementById("badge-rol").innerText = rol;
+
+            // Rellenar operador activo en formularios
             document.getElementById("llenado-operador").value = nombre;
         }
 
         function cerrarSesion() {
             localStorage.clear();
             if (html5QrcodeScanner) {
-                desactivarEscaner();
+                html5QrcodeScanner.clear().catch(err => console.error(err));
             }
-            document.getElementById("pantalla-dashboard").style.display = "none";
-            document.getElementById("pantalla-login").style.display = "flex";
-            document.getElementById("usuario").value = "";
-            document.getElementById("clave").value = "";
+            location.reload();
         }
 
+        // Navegación por pestañas
         function cambiarTab(tabId, btn) {
-            document.querySelectorAll(".modulo-pane").forEach(p => p.classList.remove("active"));
+            document.querySelectorAll(".modulo-pane").forEach(pane => pane.classList.remove("active"));
             document.querySelectorAll(".menu-tab").forEach(t => t.classList.remove("active"));
 
             document.getElementById(tabId).classList.add("active");
             btn.classList.add("active");
 
-            if (tabId !== "tab-inicio" && html5QrcodeScanner) {
-                desactivarEscaner();
+            // Si cambiamos de pestaña apagar la cámara si está prendida
+            if (tabId !== 'tab-inicio' && html5QrcodeScanner) {
+                apagarEscaner();
             }
         }
 
-        function sincronizarCodigos(valor) {
-            const campos = [
-                "codigo-detectado", "reg-codigo", "llenado-codigo", 
-                "taller-codigo", "log-codigo", "insp-codigo"
-            ];
-            campos.forEach(id => {
-                const input = document.getElementById(id);
-                if (input && input.value !== valor) {
-                    input.value = valor;
-                }
+        // Sincronizar todos los inputs de código de termo al escribir en uno
+        function sincronizarCodigos(codigo) {
+            const inputs = ["codigo-detectado", "reg-codigo", "llenado-codigo", "taller-codigo", "log-codigo", "insp-codigo"];
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = codigo;
             });
         }
 
+        // Escáner QR y Código de Barras
         function alternarEscaner() {
-            if (html5QrcodeScanner) {
-                desactivarEscaner();
-            } else {
-                activarEscaner();
-            }
-        }
-
-        function activarEscaner() {
-            const btn = document.getElementById("btn-control-camara");
             const zona = document.getElementById("zona-escaneo");
-            zona.style.display = "block";
-            btn.innerText = "🛑 Detener Cámara";
-            btn.className = "btn btn-danger";
+            const btn = document.getElementById("btn-control-camara");
 
-            html5QrcodeScanner = new Html5Qrcode("zona-escaneo");
-            html5QrcodeScanner.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                (decodedText) => {
+            if (zona.style.display === "block") {
+                apagarEscaner();
+            } else {
+                zona.style.display = "block";
+                btn.innerText = "🛑 Detener Cámara";
+                btn.className = "btn btn-danger";
+
+                html5QrcodeScanner = new Html5QrcodeScanner("zona-escaneo", { fps: 10, qrbox: 250 });
+                html5QrcodeScanner.render((decodedText) => {
                     sincronizarCodigos(decodedText);
-                    desactivarEscaner();
-                    cargarHistorial(decodedText);
-                },
-                (errorMessage) => { /* Ignorar errores continuos de lectura */ }
-            ).catch(err => {
-                alert("No se pudo acceder a la cámara.");
-                desactivarEscaner();
-            });
-        }
-
-        function desactivarEscaner() {
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.stop().then(() => {
-                    html5QrcodeScanner.clear();
-                    html5QrcodeScanner = null;
-                    restablecerUIEscaner();
-                }).catch(() => {
-                    html5QrcodeScanner = null;
-                    restablecerUIEscaner();
+                    apagarEscaner();
+                    cargarHistorialDesdeBoton();
                 });
             }
         }
 
-        function restablecerUIEscaner() {
-            const btn = document.getElementById("btn-control-camara");
+        function apagarEscaner() {
             const zona = document.getElementById("zona-escaneo");
+            const btn = document.getElementById("btn-control-camara");
+            
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().catch(err => console.error(err));
+                html5QrcodeScanner = null;
+            }
             zona.style.display = "none";
             btn.innerText = "📸 Activar Cámara";
             btn.className = "btn btn-success";
         }
 
+        // Cargar Historial
         function cargarHistorialDesdeBoton() {
             const codigo = document.getElementById("codigo-detectado").value.trim();
             if (!codigo) {
-                alert("Ingrese un código de termo válido.");
+                alert("Ingrese un código de termo válido");
                 return;
             }
-            cargarHistorial(codigo);
+            const tabHistorialBtn = document.getElementById("tab-btn-historial");
+            cambiarTab('tab-historial', tabHistorialBtn);
+            obtenerHistorialTermo(codigo);
         }
 
-        async function cargarHistorial(codigo) {
-            sincronizarCodigos(codigo);
+        async function obtenerHistorialTermo(codigo) {
             document.getElementById("lbl-termo-titulo").innerText = codigo;
 
-            // Cambiar a la pestaña de Historial automáticamente
-            const tabBtnHistorial = document.getElementById("tab-btn-historial");
-            cambiarTab("tab-historial", tabBtnHistorial);
-
             try {
-                const resp = await fetch(`${API_URL}?action=consultarTermo&codigo=${encodeURIComponent(codigo)}`);
-                const data = await resp.json();
+                const response = await fetch(`${API_URL}?action=getHistorial&codigo=${encodeURIComponent(codigo)}`);
+                const data = await response.json();
 
                 if (data.status === "success") {
-                    document.getElementById("h-cliente-anterior").innerText = data.clienteAnterior || "N/A";
-                    document.getElementById("h-cliente-actual").innerText = data.clienteActual || "Planta Central";
+                    document.getElementById("h-cliente-anterior").innerText = data.clienteAnterior || "-";
+                    document.getElementById("h-cliente-actual").innerText = data.clienteActual || "-";
                     document.getElementById("h-total-llenados").innerText = `${data.llenados ? data.llenados.length : 0} registros`;
-                    document.getElementById("h-ultimo-llenado").innerText = data.ultimoLlenado || "Sin registros";
+                    document.getElementById("h-ultimo-llenado").innerText = data.ultimoLlenado || "-";
 
                     renderizarTabla("tabla-llenados", data.llenados, ["fecha", "psi", "nivel", "operador"]);
                     renderizarTabla("tabla-taller", data.taller, ["fecha", "accion", "descripcion", "tiempo", "estado"]);
                     renderizarTabla("tabla-inspecciones", data.inspecciones, ["fecha", "psi", "componentes"]);
                     renderizarTabla("tabla-custodia", data.custodia, ["fecha", "cliente", "chofer"]);
                 } else {
-                    alert("No se encontraron registros para el termo: " + codigo);
+                    alert("No se encontraron registros para este termo");
                 }
             } catch (err) {
-                alert("Error al cargar la radiografía del termo.");
                 console.error(err);
+                alert("Error al cargar la información del termo");
             }
         }
 
-        function renderizarTabla(tablaId, lista, columnas) {
-            const tbody = document.getElementById(tablaId).querySelector("tbody");
+        function renderizarTabla(idTabla, datos, columnas) {
+            const tbody = document.getElementById(idTabla).querySelector("tbody");
             tbody.innerHTML = "";
 
-            if (!lista || lista.length === 0) {
+            if (!datos || datos.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="${columnas.length}" style="text-align: center; color: var(--text-muted);">Sin registros.</td></tr>`;
                 return;
             }
 
-            lista.forEach(item => {
+            datos.forEach(row => {
                 const tr = document.createElement("tr");
                 columnas.forEach(col => {
                     const td = document.createElement("td");
-                    td.innerText = item[col] !== undefined ? item[col] : "-";
+                    td.innerText = row[col] || "-";
                     tr.appendChild(td);
                 });
                 tbody.appendChild(tr);
             });
         }
 
-        async function enviarFormulario(action, datos) {
+        // Acciones HTTP POST
+        async function enviarFormulario(accion, payload) {
             try {
-                const query = new URLSearchParams({ action, ...datos }).toString();
-                const resp = await fetch(`${API_URL}?${query}`, { method: "POST" });
-                const res = await resp.json();
-                
-                if (res.status === "success") {
-                    alert("Registro guardado exitosamente.");
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: accion, ...payload })
+                });
+                const data = await response.json();
+                if (data.status === "success") {
+                    alert("Registro guardado con éxito.");
                     return true;
                 } else {
-                    alert("Error: " + (res.message || "No se pudo guardar."));
+                    alert("Error: " + (data.message || "No se pudo guardar."));
                     return false;
                 }
-            } catch (err) {
-                alert("Error al comunicar con el servidor.");
-                console.error(err);
+            } catch (e) {
+                console.error(e);
+                alert("Error de red al guardar los datos.");
                 return false;
             }
         }
 
         async function registrarTermo() {
-            const codigo = document.getElementById("reg-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo");
-
-            const ok = await enviarFormulario("registrarTermo", {
-                codigo: codigo,
-                serie: document.getElementById("reg-serie").value.trim(),
+            const payload = {
+                codigo: document.getElementById("reg-codigo").value,
+                serie: document.getElementById("reg-serie").value,
                 capacidad: document.getElementById("reg-capacidad").value,
                 gas: document.getElementById("reg-gas").value,
-                observaciones: document.getElementById("reg-observaciones").value.trim()
-            });
-            if (ok) cargarHistorial(codigo);
+                observaciones: document.getElementById("reg-observaciones").value
+            };
+            if (!payload.codigo) return alert("Ingrese el código del termo");
+            if (await enviarFormulario("registrarTermo", payload)) {
+                document.getElementById("reg-serie").value = "";
+                document.getElementById("reg-observaciones").value = "";
+            }
         }
 
         async function registrarLlenado() {
-            const codigo = document.getElementById("llenado-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo");
-
-            const ok = await enviarFormulario("registrarLlenado", {
-                codigo: codigo,
+            const payload = {
+                codigo: document.getElementById("llenado-codigo").value,
                 orcaIni: document.getElementById("llenado-orca-ini").value,
                 orcaFin: document.getElementById("llenado-orca-fin").value,
                 termoIni: document.getElementById("llenado-termo-ini").value,
@@ -1020,50 +1000,45 @@
                 tiempo: document.getElementById("llenado-tiempo").value,
                 operador: document.getElementById("llenado-operador").value,
                 observaciones: document.getElementById("llenado-observaciones").value
-            });
-            if (ok) cargarHistorial(codigo);
+            };
+            if (!payload.codigo) return alert("Ingrese el código del termo");
+            await enviarFormulario("registrarLlenado", payload);
         }
 
         async function registrarTaller() {
-            const codigo = document.getElementById("taller-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo");
-
-            const ok = await enviarFormulario("registrarTaller", {
-                codigo: codigo,
+            const payload = {
+                codigo: document.getElementById("taller-codigo").value,
                 tipo: document.getElementById("taller-tipo").value,
-                descripcion: document.getElementById("taller-descripcion").value.trim(),
-                tiempo: document.getElementById("taller-tiempo").value.trim(),
+                descripcion: document.getElementById("taller-descripcion").value,
+                tiempo: document.getElementById("taller-tiempo").value,
                 estado: document.getElementById("taller-estado").value
-            });
-            if (ok) cargarHistorial(codigo);
+            };
+            if (!payload.codigo) return alert("Ingrese el código del termo");
+            await enviarFormulario("registrarTaller", payload);
         }
 
         async function registrarLogistica() {
-            const codigo = document.getElementById("log-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo");
-
-            const ok = await enviarFormulario("registrarLogistica", {
-                codigo: codigo,
-                cliente: document.getElementById("log-cliente").value.trim(),
-                chofer: document.getElementById("log-chofer").value.trim()
-            });
-            if (ok) cargarHistorial(codigo);
+            const payload = {
+                codigo: document.getElementById("log-codigo").value,
+                cliente: document.getElementById("log-cliente").value,
+                chofer: document.getElementById("log-chofer").value
+            };
+            if (!payload.codigo) return alert("Ingrese el código del termo");
+            await enviarFormulario("registrarLogistica", payload);
         }
 
         async function registrarInspeccion() {
-            const codigo = document.getElementById("insp-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo");
+            const checkboxes = document.querySelectorAll(".comp-danado:checked");
+            const componentes = Array.from(checkboxes).map(cb => cb.value);
 
-            const seleccionados = Array.from(document.querySelectorAll(".comp-danado:checked")).map(c => c.value);
-
-            const ok = await enviarFormulario("registrarInspeccion", {
-                codigo: codigo,
+            const payload = {
+                codigo: document.getElementById("insp-codigo").value,
                 presion: document.getElementById("insp-presion").value,
-                componentes: seleccionados.join(", ") || "Ninguno (OK)"
-            });
-            if (ok) {
-                document.querySelectorAll(".comp-danado").forEach(c => c.checked = false);
-                cargarHistorial(codigo);
+                componentes: componentes.join(", ")
+            };
+            if (!payload.codigo) return alert("Ingrese el código del termo");
+            if (await enviarFormulario("registrarInspeccion", payload)) {
+                checkboxes.forEach(cb => cb.checked = false);
             }
         }
     </script>
