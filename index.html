@@ -138,7 +138,7 @@
         }
         .toggle-pwd:hover { opacity: 1; }
 
-        /* BUTTONS (ESTILO UNIFICADO Y MEJORADO) */
+        /* BUTTONS */
         .btn {
             width: 100%;
             padding: 12px 18px;
@@ -197,7 +197,7 @@
             box-shadow: 0 6px 12px -2px rgba(71, 85, 105, 0.4);
         }
 
-        /* HEADER & NAVIGATION (MENÚ REMARCADO) */
+        /* HEADER & NAVIGATION */
         .app-header {
             background-color: var(--dark-card);
             border-bottom: 1px solid var(--border-color);
@@ -235,7 +235,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* BARRA DE NAVEGACIÓN MEJORADA CON BORDES Y EFECTOS */
         .menu-navegacion {
             display: flex;
             gap: 8px;
@@ -263,7 +262,6 @@
             gap: 6px;
         }
 
-        /* Hover en pestañas */
         .menu-tab:hover {
             color: #ffffff;
             background-color: rgba(2, 132, 199, 0.2);
@@ -272,7 +270,6 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
 
-        /* Estado activo en pestañas */
         .menu-tab.active {
             color: #ffffff;
             background: var(--primary);
@@ -488,7 +485,7 @@
             </div>
         </header>
 
-        <!-- MENU REMARCADO CON NAVEGACIÓN MEJORADA -->
+        <!-- MENU NAVEGACION -->
         <nav class="menu-navegacion" id="barra-navegacion">
             <button class="menu-tab active" onclick="cambiarTab('tab-inicio', this)" id="tab-btn-inicio">📸 Escanear QR/Barra</button>
             <button class="menu-tab" onclick="cambiarTab('tab-historial', this)" id="tab-btn-historial">📋 Historial</button>
@@ -528,11 +525,11 @@
                 <div class="grid-datos">
                     <div class="dato-box" style="border-left-color: var(--warning);">
                         <h4>Cliente Anterior</h4>
-                        <p id="h-cliente-anterior">Cargando...</p>
+                        <p id="h-cliente-anterior">Sin datos</p>
                     </div>
                     <div class="dato-box" style="border-left-color: var(--success);">
                         <h4>Ubicación / Cliente Actual</h4>
-                        <p id="h-cliente-actual">Cargando...</p>
+                        <p id="h-cliente-actual">Sin datos</p>
                     </div>
                     <div class="dato-box">
                         <h4>Últimos Llenados</h4>
@@ -540,7 +537,7 @@
                     </div>
                     <div class="dato-box">
                         <h4>Último Llenado</h4>
-                        <p id="h-ultimo-llenado">Cargando...</p>
+                        <p id="h-ultimo-llenado">N/A</p>
                     </div>
                 </div>
 
@@ -774,206 +771,253 @@
         document.addEventListener("DOMContentLoaded", () => {
             const rolGuardado = localStorage.getItem("rol");
             const nombreGuardado = localStorage.getItem("nombre");
+            
             if (rolGuardado && nombreGuardado) {
-                document.getElementById("llenado-operador").value = nombreGuardado;
-                construirDashboardPorRol(rolGuardado, nombreGuardado);
+                iniciarSesionUI(nombreGuardado, rolGuardado);
             }
         });
 
         function alternarVisibilidadPassword() {
-            const input = document.getElementById("clave");
-            input.type = input.type === "password" ? "text" : "password";
-        }
-
-        async function enviarServidorPOST(datos) {
-            try {
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "text/plain;charset=utf-8"
-                    },
-                    body: JSON.stringify(datos)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP Error: ${response.status}`);
-                }
-
-                return await response.json();
-            } catch (error) {
-                console.error("Error al conectar con la API:", error);
-                throw new Error("No se pudo conectar con Google Apps Script. Verifique que la aplicación esté desplegada como pública ('Cualquiera').");
-            }
+            const input = document.getElementById('clave');
+            input.type = input.type === 'password' ? 'text' : 'password';
         }
 
         async function login() {
-            const usuario = document.getElementById("usuario").value.trim();
-            const clave = document.getElementById("clave").value.trim();
-            const btn = document.getElementById("btn-login");
+            const usuario = document.getElementById('usuario').value.trim();
+            const clave = document.getElementById('clave').value.trim();
+            const btn = document.getElementById('btn-login');
 
-            if(!usuario || !clave) return alert("Por favor complete todos los campos.");
+            if (!usuario || !clave) {
+                alert("Por favor ingrese usuario y contraseña");
+                return;
+            }
 
             btn.disabled = true;
-            btn.innerText = "Cargando...";
+            btn.innerText = "Verificando...";
 
             try {
-                const datos = await enviarServidorPOST({ action: "login", usuario: usuario, clave: clave });
-                if(datos.estado) {
-                    localStorage.setItem("usuario", datos.usuario); 
-                    localStorage.setItem("nombre", datos.nombre); 
-                    localStorage.setItem("rol", datos.rol);
-                    
-                    document.getElementById("llenado-operador").value = datos.nombre || datos.usuario;
-                    construirDashboardPorRol(datos.rol, datos.nombre);
-                } else { 
-                    alert(datos.mensaje || "Usuario o contraseña incorrectos."); 
+                const resp = await fetch(`${API_URL}?action=login&usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`);
+                const data = await resp.json();
+
+                if (data.status === "success") {
+                    localStorage.setItem("rol", data.rol);
+                    localStorage.setItem("nombre", data.nombre);
+                    iniciarSesionUI(data.nombre, data.rol);
+                } else {
+                    alert("Credenciales incorrectas: " + (data.message || ""));
                 }
             } catch (err) {
-                alert(err.message);
+                alert("Error al conectar con el servidor backend.");
+                console.error(err);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Ingresar al Sistema";
             }
         }
 
-        function construirDashboardPorRol(rol, nombre) {
-            document.getElementById("pantalla-login").style.display = "none";
-            document.getElementById("pantalla-dashboard").style.display = "block";
-            document.getElementById("nombre-usuario").innerText = nombre;
-            document.getElementById("badge-rol").innerText = rol.toUpperCase();
+        function iniciarSesionUI(nombre, rol) {
+            document.getElementById('pantalla-login').style.display = 'none';
+            document.getElementById('pantalla-dashboard').style.display = 'block';
+            document.getElementById('nombre-usuario').innerText = nombre;
+            document.getElementById('badge-rol').innerText = rol;
+            document.getElementById('llenado-operador').value = nombre;
+        }
 
-            const r = rol.toLowerCase().trim();
-            
-            document.getElementById("tab-btn-historial").style.display = "none";
-            document.getElementById("tab-btn-termos").style.display = "none";
-            document.getElementById("tab-btn-llenado").style.display = "none";
-            document.getElementById("tab-btn-taller").style.display = "none";
-            document.getElementById("tab-btn-logistica").style.display = "none";
-            document.getElementById("tab-btn-inspecciones").style.display = "none";
-
-            if (r === "consultor") {
-                document.getElementById("tab-btn-historial").style.display = "flex";
-            } else if (r === "tecnico" || r === "taller" || r === "produccion") {
-                document.getElementById("tab-btn-historial").style.display = "flex";
-                document.getElementById("tab-btn-llenado").style.display = "flex";
-                document.getElementById("tab-btn-taller").style.display = "flex";
-                document.getElementById("tab-btn-inspecciones").style.display = "flex";
-            } else {
-                document.getElementById("tab-btn-historial").style.display = "flex";
-                document.getElementById("tab-btn-termos").style.display = "flex";
-                document.getElementById("tab-btn-llenado").style.display = "flex";
-                document.getElementById("tab-btn-taller").style.display = "flex";
-                document.getElementById("tab-btn-logistica").style.display = "flex";
-                document.getElementById("tab-btn-inspecciones").style.display = "flex";
+        function cerrarSesion() {
+            localStorage.clear();
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().catch(() => {});
             }
-
-            cambiarTab('tab-inicio', document.getElementById('tab-btn-inicio'));
+            location.reload();
         }
 
         function cambiarTab(tabId, btn) {
             document.querySelectorAll('.modulo-pane').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.menu-tab').forEach(el => el.classList.remove('active'));
+            
             document.getElementById(tabId).classList.add('active');
-            if (btn) btn.classList.add('active');
-        }
+            if(btn) btn.classList.add('active');
 
-        function alternarEscaner() {
-            const zona = document.getElementById("zona-escaneo"); 
-            const btn = document.getElementById("btn-control-camara");
-            if (html5QrcodeScanner === null) {
-                zona.style.display = "block"; 
-                btn.innerText = "🛑 Detener Cámara"; 
-                btn.className = "btn btn-danger";
-                
-                html5QrcodeScanner = new Html5Qrcode("zona-escaneo");
-                html5QrcodeScanner.start(
-                    { facingMode: "environment" }, 
-                    { fps: 15, qrbox: { width: 250, height: 180 } },
-                    (texto) => {
-                        const limpio = texto.trim().substring(0, 16);
-                        sincronizarCodigos(limpio); 
-                        detenerEscanerEfectivo();
-                        solicitarHistorialServidor(limpio);
-                    },
-                    () => {}
-                ).catch(() => { alert("Active los permisos de cámara en su navegador."); detenerEscanerEfectivo(); });
-            } else { 
-                detenerEscanerEfectivo(); 
+            if (tabId !== 'tab-inicio' && html5QrcodeScanner) {
+                detenerEscaner();
             }
         }
 
-        function detenerEscanerEfectivo() {
-            const zona = document.getElementById("zona-escaneo"); 
-            const btn = document.getElementById("btn-control-camara");
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.stop().then(() => { 
-                    html5QrcodeScanner = null; 
-                    zona.style.display = "none"; 
-                    btn.innerText = "📸 Activar Cámara"; 
-                    btn.className = "btn btn-success"; 
-                }).catch(() => { 
-                    html5QrcodeScanner = null; 
-                    zona.style.display = "none"; 
+        function alternarEscaner() {
+            const zona = document.getElementById('zona-escaneo');
+            const btn = document.getElementById('btn-control-camara');
+
+            if (zona.style.display === 'block') {
+                detenerEscaner();
+            } else {
+                zona.style.display = 'block';
+                btn.className = "btn btn-danger";
+                btn.innerText = "🛑 Detener Cámara";
+
+                html5QrcodeScanner = new Html5QrcodeScanner("zona-escaneo", { fps: 10, qrbox: 250 });
+                html5QrcodeScanner.render((decodedText) => {
+                    sincronizarCodigos(decodedText);
+                    detenerEscaner();
+                    cargarHistorial(decodedText);
+                }, (error) => {
+                    // Ignorar errores continuos de lectura
                 });
             }
         }
 
-        function sincronizarCodigos(valor) {
-            const u = valor.toUpperCase().substring(0, 16);
-            document.getElementById("codigo-detectado").value = u;
-            document.getElementById("reg-codigo").value = u;
-            document.getElementById("llenado-codigo").value = u;
-            document.getElementById("taller-codigo").value = u;
-            document.getElementById("log-codigo").value = u;
-            document.getElementById("insp-codigo").value = u;
-        }
-
-        function cargarHistorialDesdeBoton() {
-            const cod = document.getElementById("codigo-detectado").value.trim();
-            if(!cod) return alert("Por favor inserte o escanee un código de termo.");
-            solicitarHistorialServidor(cod);
-        }
-
-        async function solicitarHistorialServidor(codigo) {
-            document.getElementById("lbl-termo-titulo").innerText = codigo.toUpperCase();
-            cambiarTab('tab-historial', document.getElementById('tab-btn-historial'));
-            
-            try {
-                const res = await fetch(`${API_URL}?action=obtenerHistorial&codigo=${encodeURIComponent(codigo)}`).then(r => r.json());
-                if(res.estado) {
-                    document.getElementById("h-cliente-anterior").innerText = res.clienteAnterior || 'N/A';
-                    document.getElementById("h-cliente-actual").innerText = res.clienteActual || 'N/A';
-                    document.getElementById("h-total-llenados").innerText = (res.llenados ? res.llenados.length : 0) + " registros";
-                    document.getElementById("h-ultimo-llenado").innerText = res.ultimoLlenado || 'N/A';
-                    
-                    let htmlLlenados = "";
-                    if(!res.llenados || res.llenados.length === 0) htmlLlenados = "<tr><td colspan='4' style='text-align: center; color: var(--text-muted);'>Sin cargas históricas.</td></tr>";
-                    else res.llenados.slice(0, 10).forEach(l => { htmlLlenados += `<tr><td>${l.fecha}</td><td>${l.presion}</td><td>${l.nivel}</td><td>${l.operador}</td></tr>`; });
-                    document.getElementById("tabla-llenados").querySelector("tbody").innerHTML = htmlLlenados;
-
-                    let htmlTaller = "";
-                    if(!res.mantenimientos || res.mantenimientos.length === 0) htmlTaller = "<tr><td colspan='5' style='text-align: center; color: var(--text-muted);'>Sin reportes de taller.</td></tr>";
-                    else res.mantenimientos.forEach(m => { htmlTaller += `<tr><td>${m.fecha}</td><td><b>${m.tipo}</b></td><td>${m.descripcion}</td><td>${m.tiempoInvertido}</td><td>${m.estado}</td></tr>`; });
-                    document.getElementById("tabla-taller").querySelector("tbody").innerHTML = htmlTaller;
-
-                    let htmlInsp = "";
-                    if(!res.inspecciones || res.inspecciones.length === 0) htmlInsp = "<tr><td colspan='3' style='text-align: center; color: var(--text-muted);'>Sin inspecciones registradas.</td></tr>";
-                    else res.inspecciones.forEach(i => { htmlInsp += `<tr><td>${i.fecha}</td><td>${i.presion} PSI</td><td>${i.componentes}</td></tr>`; });
-                    document.getElementById("tabla-inspecciones").querySelector("tbody").innerHTML = htmlInsp;
-
-                    let htmlCust = "";
-                    if(!res.custodia || res.custodia.length === 0) htmlCust = "<tr><td colspan='3' style='text-align: center; color: var(--text-muted);'>Sin registros de custodia.</td></tr>";
-                    else res.custodia.forEach(c => { htmlCust += `<tr><td>${c.fecha}</td><td>${c.cliente}</td><td>${c.chofer}</td></tr>`; });
-                    document.getElementById("tabla-custodia").querySelector("tbody").innerHTML = htmlCust;
-                }
-            } catch(e) {
-                console.error(e);
+        function detenerEscaner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().catch(() => {});
+                html5QrcodeScanner = null;
+            }
+            document.getElementById('zona-escaneo').style.display = 'none';
+            const btn = document.getElementById('btn-control-camara');
+            if (btn) {
+                btn.className = "btn btn-success";
+                btn.innerText = "📸 Activar Cámara";
             }
         }
 
-        function cerrarSesion() {
-            localStorage.clear();
-            location.reload();
+        function sincronizarCodigos(codigo) {
+            const campos = ['codigo-detectado', 'reg-codigo', 'llenado-codigo', 'taller-codigo', 'log-codigo', 'insp-codigo'];
+            campos.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = codigo;
+            });
+        }
+
+        function cargarHistorialDesdeBoton() {
+            const cod = document.getElementById('codigo-detectado').value.trim();
+            if (!cod) {
+                alert("Ingrese o escanee un código de termo primero.");
+                return;
+            }
+            cargarHistorial(cod);
+        }
+
+        async function cargarHistorial(codigo) {
+            document.getElementById('lbl-termo-titulo').innerText = codigo;
+            cambiarTab('tab-historial', document.getElementById('tab-btn-historial'));
+
+            try {
+                const resp = await fetch(`${API_URL}?action=obtenerHistorial&codigo=${encodeURIComponent(codigo)}`);
+                const data = await resp.json();
+
+                if (data.status === "success") {
+                    document.getElementById('h-cliente-anterior').innerText = data.clienteAnterior || 'N/A';
+                    document.getElementById('h-cliente-actual').innerText = data.clienteActual || 'En Planta';
+                    document.getElementById('h-total-llenados').innerText = `${data.llenados ? data.llenados.length : 0} registros`;
+                    document.getElementById('h-ultimo-llenado').innerText = data.ultimoLlenado || 'N/A';
+
+                    renderTabla('tabla-llenados', data.llenados, ['fecha', 'psiFin', 'pctFin', 'operador']);
+                    renderTabla('tabla-taller', data.taller, ['fecha', 'accion', 'descripcion', 'tiempo', 'estado']);
+                    renderTabla('tabla-inspecciones', data.inspecciones, ['fecha', 'presion', 'danados']);
+                    renderTabla('tabla-custodia', data.custodia, ['fecha', 'cliente', 'chofer']);
+                }
+            } catch (err) {
+                console.error("Error al cargar historial", err);
+            }
+        }
+
+        function renderTabla(idTabla, datos, columnas) {
+            const tbody = document.getElementById(idTabla).querySelector('tbody');
+            tbody.innerHTML = '';
+
+            if (!datos || datos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${columnas.length}" style="text-align: center; color: var(--text-muted);">Sin registros.</td></tr>`;
+                return;
+            }
+
+            datos.forEach(row => {
+                const tr = document.createElement('tr');
+                columnas.forEach(col => {
+                    const td = document.createElement('td');
+                    td.innerText = row[col] || '-';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function enviarFormulario(payload) {
+            try {
+                const resp = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                return await resp.json();
+            } catch (err) {
+                console.error(err);
+                return { status: 'error', message: 'Error de red' };
+            }
+        }
+
+        async function registrarTermo() {
+            const data = {
+                action: 'registrarTermo',
+                codigo: document.getElementById('reg-codigo').value,
+                serie: document.getElementById('reg-serie').value,
+                capacidad: document.getElementById('reg-capacidad').value,
+                gas: document.getElementById('reg-gas').value,
+                observaciones: document.getElementById('reg-observaciones').value
+            };
+            const res = await enviarFormulario(data);
+            alert(res.message || "Registro procesado");
+        }
+
+        async function registrarLlenado() {
+            const data = {
+                action: 'registrarLlenado',
+                codigo: document.getElementById('llenado-codigo').value,
+                orcaIni: document.getElementById('llenado-orca-ini').value,
+                orcaFin: document.getElementById('llenado-orca-fin').value,
+                termoIni: document.getElementById('llenado-termo-ini').value,
+                termoFin: document.getElementById('llenado-termo-fin').value,
+                pctIni: document.getElementById('llenado-pct-ini').value,
+                pctFin: document.getElementById('llenado-pct-fin').value,
+                cantidad: document.getElementById('llenado-cantidad').value,
+                tiempo: document.getElementById('llenado-tiempo').value,
+                operador: document.getElementById('llenado-operador').value,
+                observaciones: document.getElementById('llenado-observaciones').value
+            };
+            const res = await enviarFormulario(data);
+            alert(res.message || "Llenado guardado");
+        }
+
+        async function registrarTaller() {
+            const data = {
+                action: 'registrarTaller',
+                codigo: document.getElementById('taller-codigo').value,
+                tipo: document.getElementById('taller-tipo').value,
+                descripcion: document.getElementById('taller-descripcion').value,
+                tiempo: document.getElementById('taller-tiempo').value,
+                estado: document.getElementById('taller-estado').value
+            };
+            const res = await enviarFormulario(data);
+            alert(res.message || "Registro de taller guardado");
+        }
+
+        async function registrarLogistica() {
+            const data = {
+                action: 'registrarLogistica',
+                codigo: document.getElementById('log-codigo').value,
+                cliente: document.getElementById('log-cliente').value,
+                chofer: document.getElementById('log-chofer').value
+            };
+            const res = await enviarFormulario(data);
+            alert(res.message || "Despacho guardado");
+        }
+
+        async function registrarInspeccion() {
+            const danados = Array.from(document.querySelectorAll('.comp-danado:checked')).map(cb => cb.value);
+            const data = {
+                action: 'registrarInspeccion',
+                codigo: document.getElementById('insp-codigo').value,
+                presion: document.getElementById('insp-presion').value,
+                componentesDanados: danados
+            };
+            const res = await enviarFormulario(data);
+            alert(res.message || "Inspección guardada");
         }
     </script>
 </body>
