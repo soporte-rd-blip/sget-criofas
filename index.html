@@ -796,19 +796,27 @@
             btn.innerText = "Verificando...";
 
             try {
-                const resp = await fetch(`${API_URL}?action=login&usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`);
-                const data = await resp.json();
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        'action': 'login',
+                        'usuario': usuario,
+                        'clave': clave
+                    })
+                });
 
-                if (data.status === "success") {
+                const data = await res.json();
+
+                if (data.status === 'success') {
                     localStorage.setItem("rol", data.rol);
-                    localStorage.setItem("nombre", data.nombre);
-                    iniciarSesionUI(data.nombre, data.rol);
+                    localStorage.setItem("nombre", data.nombre || usuario);
+                    iniciarSesionUI(data.nombre || usuario, data.rol);
                 } else {
-                    alert("Credenciales incorrectas: " + (data.message || ""));
+                    alert(data.message || "Credenciales incorrectas");
                 }
             } catch (err) {
-                alert("Error al conectar con el servidor backend.");
-                console.error(err);
+                alert("Error de conexión con el servidor");
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Ingresar al Sistema";
@@ -820,6 +828,8 @@
             document.getElementById('pantalla-dashboard').style.display = 'block';
             document.getElementById('nombre-usuario').innerText = nombre;
             document.getElementById('badge-rol').innerText = rol;
+
+            // Pre-llenar operadores con el nombre de usuario activo
             document.getElementById('llenado-operador').value = nombre;
         }
 
@@ -836,11 +846,17 @@
             document.querySelectorAll('.menu-tab').forEach(el => el.classList.remove('active'));
             
             document.getElementById(tabId).classList.add('active');
-            if(btn) btn.classList.add('active');
+            btn.classList.add('active');
+        }
 
-            if (tabId !== 'tab-inicio' && html5QrcodeScanner) {
-                detenerEscaner();
-            }
+        function sincronizarCodigos(codigo) {
+            codigo = codigo.toUpperCase();
+            document.getElementById('codigo-detectado').value = codigo;
+            document.getElementById('reg-codigo').value = codigo;
+            document.getElementById('llenado-codigo').value = codigo;
+            document.getElementById('taller-codigo').value = codigo;
+            document.getElementById('log-codigo').value = codigo;
+            document.getElementById('insp-codigo').value = codigo;
         }
 
         function alternarEscaner() {
@@ -848,176 +864,179 @@
             const btn = document.getElementById('btn-control-camara');
 
             if (zona.style.display === 'block') {
-                detenerEscaner();
+                if (html5QrcodeScanner) {
+                    html5QrcodeScanner.clear().then(() => {
+                        zona.style.display = 'none';
+                        btn.innerText = "📸 Activar Cámara";
+                        btn.className = "btn btn-success";
+                    });
+                }
             } else {
                 zona.style.display = 'block';
-                btn.className = "btn btn-danger";
                 btn.innerText = "🛑 Detener Cámara";
+                btn.className = "btn btn-danger";
 
-                html5QrcodeScanner = new Html5QrcodeScanner("zona-escaneo", { fps: 10, qrbox: 250 });
-                html5QrcodeScanner.render((decodedText) => {
-                    sincronizarCodigos(decodedText);
-                    detenerEscaner();
-                    cargarHistorial(decodedText);
-                }, (error) => {
-                    // Ignorar errores continuos de lectura
+                html5QrcodeScanner = new Html5QrcodeScanner("zona-escaneo", { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 } 
                 });
-            }
-        }
 
-        function detenerEscaner() {
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear().catch(() => {});
-                html5QrcodeScanner = null;
+                html5QrcodeScanner.render((text) => {
+                    sincronizarCodigos(text);
+                    html5QrcodeScanner.clear();
+                    zona.style.display = 'none';
+                    btn.innerText = "📸 Activar Cámara";
+                    btn.className = "btn btn-success";
+                    cargarHistorial(text);
+                }, () => {});
             }
-            document.getElementById('zona-escaneo').style.display = 'none';
-            const btn = document.getElementById('btn-control-camara');
-            if (btn) {
-                btn.className = "btn btn-success";
-                btn.innerText = "📸 Activar Cámara";
-            }
-        }
-
-        function sincronizarCodigos(codigo) {
-            const campos = ['codigo-detectado', 'reg-codigo', 'llenado-codigo', 'taller-codigo', 'log-codigo', 'insp-codigo'];
-            campos.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.value = codigo;
-            });
         }
 
         function cargarHistorialDesdeBoton() {
-            const cod = document.getElementById('codigo-detectado').value.trim();
-            if (!cod) {
+            const codigo = document.getElementById('codigo-detectado').value;
+            if (!codigo) {
                 alert("Ingrese o escanee un código de termo primero.");
                 return;
             }
-            cargarHistorial(cod);
+            cargarHistorial(codigo);
         }
 
         async function cargarHistorial(codigo) {
+            sincronizarCodigos(codigo);
             document.getElementById('lbl-termo-titulo').innerText = codigo;
+
+            // Cambiar dinámicamente a la pestaña de historial
             cambiarTab('tab-historial', document.getElementById('tab-btn-historial'));
 
             try {
-                const resp = await fetch(`${API_URL}?action=obtenerHistorial&codigo=${encodeURIComponent(codigo)}`);
-                const data = await resp.json();
+                const res = await fetch(`${API_URL}?action=getHistorial&termo=${encodeURIComponent(codigo)}`);
+                const data = await res.json();
 
-                if (data.status === "success") {
-                    document.getElementById('h-cliente-anterior').innerText = data.clienteAnterior || 'N/A';
-                    document.getElementById('h-cliente-actual').innerText = data.clienteActual || 'En Planta';
-                    document.getElementById('h-total-llenados').innerText = `${data.llenados ? data.llenados.length : 0} registros`;
+                if (data.status === 'success') {
+                    // Métricas rápidas
+                    document.getElementById('h-cliente-anterior').innerText = data.clienteAnterior || 'Sin Registro';
+                    document.getElementById('h-cliente-actual').innerText = data.clienteActual || 'Sin Registro';
+                    document.getElementById('h-total-llenados').innerText = (data.llenados ? data.llenados.length : 0) + ' registros';
                     document.getElementById('h-ultimo-llenado').innerText = data.ultimoLlenado || 'N/A';
 
-                    renderTabla('tabla-llenados', data.llenados, ['fecha', 'psiFin', 'pctFin', 'operador']);
-                    renderTabla('tabla-taller', data.taller, ['fecha', 'accion', 'descripcion', 'tiempo', 'estado']);
-                    renderTabla('tabla-inspecciones', data.inspecciones, ['fecha', 'presion', 'danados']);
-                    renderTabla('tabla-custodia', data.custodia, ['fecha', 'cliente', 'chofer']);
+                    // Tabla Llenados
+                    const tLlenado = document.querySelector('#tabla-llenados tbody');
+                    tLlenado.innerHTML = data.llenados && data.llenados.length ? data.llenados.map(r => 
+                        `<tr><td>${r.fecha}</td><td>${r.psi}</td><td>${r.nivel}%</td><td>${r.operador}</td></tr>`
+                    ).join('') : '<tr><td colspan="4" style="text-align:center;">Sin registros</td></tr>';
+
+                    // Tabla Taller
+                    const tTaller = document.querySelector('#tabla-taller tbody');
+                    tTaller.innerHTML = data.taller && data.taller.length ? data.taller.map(r => 
+                        `<tr><td>${r.fecha}</td><td>${r.accion}</td><td>${r.descripcion}</td><td>${r.tiempo}</td><td>${r.estado}</td></tr>`
+                    ).join('') : '<tr><td colspan="5" style="text-align:center;">Sin registros</td></tr>';
+
+                    // Tabla Inspecciones
+                    const tInsp = document.querySelector('#tabla-inspecciones tbody');
+                    tInsp.innerHTML = data.inspecciones && data.inspecciones.length ? data.inspecciones.map(r => 
+                        `<tr><td>${r.fecha}</td><td>${r.psi}</td><td>${r.componentes}</td></tr>`
+                    ).join('') : '<tr><td colspan="3" style="text-align:center;">Sin registros</td></tr>';
+
+                    // Tabla Custodia/Logística
+                    const tCust = document.querySelector('#tabla-custodia tbody');
+                    tCust.innerHTML = data.custodia && data.custodia.length ? data.custodia.map(r => 
+                        `<tr><td>${r.fecha}</td><td>${r.cliente}</td><td>${r.chofer}</td></tr>`
+                    ).join('') : '<tr><td colspan="3" style="text-align:center;">Sin registros</td></tr>';
                 }
             } catch (err) {
-                console.error("Error al cargar historial", err);
-            }
-        }
-
-        function renderTabla(idTabla, datos, columnas) {
-            const tbody = document.getElementById(idTabla).querySelector('tbody');
-            tbody.innerHTML = '';
-
-            if (!datos || datos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${columnas.length}" style="text-align: center; color: var(--text-muted);">Sin registros.</td></tr>`;
-                return;
-            }
-
-            datos.forEach(row => {
-                const tr = document.createElement('tr');
-                columnas.forEach(col => {
-                    const td = document.createElement('td');
-                    td.innerText = row[col] || '-';
-                    tr.appendChild(td);
-                });
-                tbody.appendChild(tr);
-            });
-        }
-
-        async function enviarFormulario(payload) {
-            try {
-                const resp = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                return await resp.json();
-            } catch (err) {
                 console.error(err);
-                return { status: 'error', message: 'Error de red' };
+                alert("Error al cargar la información del termo.");
+            }
+        }
+
+        async function enviarFormulario(action, datos) {
+            datos.append('action', action);
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(datos)
+                });
+                const result = await res.json();
+                alert(result.message || "Operación completada con éxito.");
+                return result;
+            } catch (e) {
+                alert("Error al procesar la solicitud.");
             }
         }
 
         async function registrarTermo() {
-            const data = {
-                action: 'registrarTermo',
-                codigo: document.getElementById('reg-codigo').value,
-                serie: document.getElementById('reg-serie').value,
-                capacidad: document.getElementById('reg-capacidad').value,
-                gas: document.getElementById('reg-gas').value,
-                observaciones: document.getElementById('reg-observaciones').value
-            };
-            const res = await enviarFormulario(data);
-            alert(res.message || "Registro procesado");
+            const codigo = document.getElementById('reg-codigo').value;
+            if (!codigo) return alert("Ingrese el código del termo");
+
+            const params = new FormData();
+            params.append('codigo', codigo);
+            params.append('serie', document.getElementById('reg-serie').value);
+            params.append('capacidad', document.getElementById('reg-capacidad').value);
+            params.append('gas', document.getElementById('reg-gas').value);
+            params.append('observaciones', document.getElementById('reg-observaciones').value);
+
+            await enviarFormulario('registrarTermo', params);
         }
 
         async function registrarLlenado() {
-            const data = {
-                action: 'registrarLlenado',
-                codigo: document.getElementById('llenado-codigo').value,
-                orcaIni: document.getElementById('llenado-orca-ini').value,
-                orcaFin: document.getElementById('llenado-orca-fin').value,
-                termoIni: document.getElementById('llenado-termo-ini').value,
-                termoFin: document.getElementById('llenado-termo-fin').value,
-                pctIni: document.getElementById('llenado-pct-ini').value,
-                pctFin: document.getElementById('llenado-pct-fin').value,
-                cantidad: document.getElementById('llenado-cantidad').value,
-                tiempo: document.getElementById('llenado-tiempo').value,
-                operador: document.getElementById('llenado-operador').value,
-                observaciones: document.getElementById('llenado-observaciones').value
-            };
-            const res = await enviarFormulario(data);
-            alert(res.message || "Llenado guardado");
+            const codigo = document.getElementById('llenado-codigo').value;
+            if (!codigo) return alert("Ingrese el código del termo");
+
+            const params = new FormData();
+            params.append('codigo', codigo);
+            params.append('orcaIni', document.getElementById('llenado-orca-ini').value);
+            params.append('orcaFin', document.getElementById('llenado-orca-fin').value);
+            params.append('termoIni', document.getElementById('llenado-termo-ini').value);
+            params.append('termoFin', document.getElementById('llenado-termo-fin').value);
+            params.append('pctIni', document.getElementById('llenado-pct-ini').value);
+            params.append('pctFin', document.getElementById('llenado-pct-fin').value);
+            params.append('cantidad', document.getElementById('llenado-cantidad').value);
+            params.append('tiempo', document.getElementById('llenado-tiempo').value);
+            params.append('operador', document.getElementById('llenado-operador').value);
+            params.append('observaciones', document.getElementById('llenado-observaciones').value);
+
+            await enviarFormulario('registrarLlenado', params);
         }
 
         async function registrarTaller() {
-            const data = {
-                action: 'registrarTaller',
-                codigo: document.getElementById('taller-codigo').value,
-                tipo: document.getElementById('taller-tipo').value,
-                descripcion: document.getElementById('taller-descripcion').value,
-                tiempo: document.getElementById('taller-tiempo').value,
-                estado: document.getElementById('taller-estado').value
-            };
-            const res = await enviarFormulario(data);
-            alert(res.message || "Registro de taller guardado");
+            const codigo = document.getElementById('taller-codigo').value;
+            if (!codigo) return alert("Ingrese el código del termo");
+
+            const params = new FormData();
+            params.append('codigo', codigo);
+            params.append('tipo', document.getElementById('taller-tipo').value);
+            params.append('descripcion', document.getElementById('taller-descripcion').value);
+            params.append('tiempo', document.getElementById('taller-tiempo').value);
+            params.append('estado', document.getElementById('taller-estado').value);
+
+            await enviarFormulario('registrarTaller', params);
         }
 
         async function registrarLogistica() {
-            const data = {
-                action: 'registrarLogistica',
-                codigo: document.getElementById('log-codigo').value,
-                cliente: document.getElementById('log-cliente').value,
-                chofer: document.getElementById('log-chofer').value
-            };
-            const res = await enviarFormulario(data);
-            alert(res.message || "Despacho guardado");
+            const codigo = document.getElementById('log-codigo').value;
+            if (!codigo) return alert("Ingrese el código del termo");
+
+            const params = new FormData();
+            params.append('codigo', codigo);
+            params.append('cliente', document.getElementById('log-cliente').value);
+            params.append('chofer', document.getElementById('log-chofer').value);
+
+            await enviarFormulario('registrarLogistica', params);
         }
 
         async function registrarInspeccion() {
-            const danados = Array.from(document.querySelectorAll('.comp-danado:checked')).map(cb => cb.value);
-            const data = {
-                action: 'registrarInspeccion',
-                codigo: document.getElementById('insp-codigo').value,
-                presion: document.getElementById('insp-presion').value,
-                componentesDanados: danados
-            };
-            const res = await enviarFormulario(data);
-            alert(res.message || "Inspección guardada");
+            const codigo = document.getElementById('insp-codigo').value;
+            if (!codigo) return alert("Ingrese el código del termo");
+
+            const marcados = Array.from(document.querySelectorAll('.comp-danado:checked')).map(cb => cb.value);
+
+            const params = new FormData();
+            params.append('codigo', codigo);
+            params.append('presion', document.getElementById('insp-presion').value);
+            params.append('danados', marcados.join(', '));
+
+            await enviarFormulario('registrarInspeccion', params);
         }
     </script>
 </body>
