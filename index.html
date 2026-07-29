@@ -763,7 +763,7 @@
         <button type="button" class="btn btn-danger logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
 
-    <!-- SCRIPT DE LÓGICA DE APLICACIÓN -->
+    <!-- SCRIPT COMPLETO DE LÓGICA DE APLICACIÓN -->
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyLy0DXqyHWS4nfOg02F5XdSjKHc0WwkBwFPix66e1iniNGTu6Z22gMmW7N2qCeQXOY/exec";
         let html5QrcodeScanner = null;
@@ -777,32 +777,48 @@
             }
         });
 
-        function alternarVisibilidadPassword() {
-            const input = document.getElementById("clave");
-            input.type = input.type === "password" ? "text" : "password";
-        }
-
+        // -------------------------------------------------------------
+        // CONEXIÓN ROBUSTA A GOOGLE APPS SCRIPT (RESUELVE ERRORES HTTP/CORS)
+        // -------------------------------------------------------------
         async function consumirApi(accion, datos = {}) {
             try {
+                const payload = JSON.stringify({ accion: accion, ...datos });
+
                 const response = await fetch(API_URL, {
-                    method: 'POST',
-                    redirect: 'follow',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ accion, ...datos })
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8"
+                    },
+                    body: payload,
+                    redirect: "follow"
                 });
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP Status: ${response.status}`);
+                }
+
                 return await response.json();
             } catch (err) {
                 console.error("Error de red o comunicación:", err);
-                return { exito: false, mensaje: "Error de comunicación con el servidor." };
+                alert("Error al conectar con el servidor. Verifica tu conexión o vuelve a desplegar la Web App.");
+                return { exito: false, mensaje: err.toString() };
             }
         }
 
+        // -------------------------------------------------------------
+        // MANEJO DE SESIÓN Y UI
+        // -------------------------------------------------------------
+        function alternarVisibilidadPassword() {
+            const inputClave = document.getElementById("clave");
+            inputClave.type = inputClave.type === "password" ? "text" : "password";
+        }
+
         async function login() {
-            const user = document.getElementById("usuario").value.trim();
-            const pass = document.getElementById("clave").value.trim();
-            
-            if (!user || !pass) {
-                alert("Por favor ingrese usuario y contraseña.");
+            const usuario = document.getElementById("usuario").value.trim();
+            const clave = document.getElementById("clave").value.trim();
+
+            if (!usuario || !clave) {
+                alert("Por favor ingrese usuario y contraseña");
                 return;
             }
 
@@ -810,17 +826,17 @@
             btn.disabled = true;
             btn.innerText = "Verificando...";
 
-            const res = await consumirApi("hacerLogin", { usuario: user, clave: pass });
-            
+            const respuesta = await consumirApi("hacerLogin", { usuario, clave });
+
             btn.disabled = false;
             btn.innerText = "Ingresar al Sistema";
 
-            if (res.exito) {
-                localStorage.setItem("nombre", res.nombre || user);
-                localStorage.setItem("rol", res.rol || "Operador");
-                iniciarSesionUI(res.nombre || user, res.rol || "Operador");
+            if (respuesta && respuesta.exito) {
+                localStorage.setItem("rol", respuesta.rol || "Operador");
+                localStorage.setItem("nombre", respuesta.nombre || usuario);
+                iniciarSesionUI(respuesta.nombre || usuario, respuesta.rol || "Operador");
             } else {
-                alert(res.mensaje || "Credenciales incorrectas");
+                alert(respuesta.mensaje || "Usuario o contraseña incorrectos");
             }
         }
 
@@ -829,32 +845,30 @@
             document.getElementById("pantalla-dashboard").style.display = "block";
             document.getElementById("nombre-usuario").innerText = nombre;
             document.getElementById("badge-rol").innerText = rol;
-            document.getElementById("llenado-operador").value = nombre;
         }
 
         function cerrarSesion() {
             localStorage.clear();
             if (html5QrcodeScanner) {
-                detenerEscaner();
+                html5QrcodeScanner.clear().catch(() => {});
             }
-            document.getElementById("pantalla-dashboard").style.display = "none";
-            document.getElementById("pantalla-login").style.display = "flex";
+            location.reload();
         }
 
-        function cambiarTab(idTab, btn) {
-            document.querySelectorAll(".modulo-pane").forEach(p => p.classList.remove("active"));
-            document.querySelectorAll(".menu-tab").forEach(t => t.classList.remove("active"));
+        function cambiarTab(tabId, elementoBtn) {
+            document.querySelectorAll(".modulo-pane").forEach(pane => pane.classList.remove("active"));
+            document.querySelectorAll(".menu-tab").forEach(tab => tab.classList.remove("active"));
             
-            document.getElementById(idTab).classList.add("active");
-            btn.classList.add("active");
+            document.getElementById(tabId).classList.add("active");
+            elementoBtn.classList.add("active");
 
-            if (idTab !== 'tab-inicio' && html5QrcodeScanner) {
+            // Si cambiamos de pestaña cerramos la cámara activa para ahorrar energía
+            if (tabId !== 'tab-inicio' && html5QrcodeScanner) {
                 detenerEscaner();
             }
         }
 
         function sincronizarCodigos(codigo) {
-            codigo = codigo.toUpperCase().trim();
             document.getElementById("reg-codigo").value = codigo;
             document.getElementById("llenado-codigo").value = codigo;
             document.getElementById("taller-codigo").value = codigo;
@@ -862,87 +876,94 @@
             document.getElementById("insp-codigo").value = codigo;
         }
 
+        // -------------------------------------------------------------
+        // ESCÁNER DE CÓDIGO DE BARRAS / QR
+        // -------------------------------------------------------------
         function alternarEscaner() {
-            const btn = document.getElementById("btn-control-camara");
-            const zona = document.getElementById("zona-escaneo");
+            const contenedorZona = document.getElementById("zona-escaneo");
+            const btnCamara = document.getElementById("btn-control-camara");
 
-            if (html5QrcodeScanner) {
+            if (contenedorZona.style.display === "block") {
                 detenerEscaner();
             } else {
-                zona.style.display = "block";
-                btn.className = "btn btn-danger";
-                btn.innerText = "🛑 Detener Cámara";
+                contenedorZona.style.display = "block";
+                btnCamara.className = "btn btn-danger";
+                btnCamara.innerText = "🛑 Detener Cámara";
 
                 html5QrcodeScanner = new Html5QrcodeScanner("zona-escaneo", { fps: 10, qrbox: 250 });
                 html5QrcodeScanner.render((decodedText) => {
                     document.getElementById("codigo-detectado").value = decodedText;
                     sincronizarCodigos(decodedText);
                     detenerEscaner();
-                    cargarHistorial(decodedText);
+                    consultarDatosTermo(decodedText);
                 }, (error) => {
-                    // Mute scanner error logs
+                    // Ignorar errores continuos de búsqueda de frame
                 });
             }
         }
 
         function detenerEscaner() {
             if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear().catch(e => console.error(e));
+                html5QrcodeScanner.clear().catch(err => console.error(err));
                 html5QrcodeScanner = null;
             }
             document.getElementById("zona-escaneo").style.display = "none";
-            const btn = document.getElementById("btn-control-camara");
-            btn.className = "btn btn-success";
-            btn.innerText = "📸 Activar Cámara";
+            const btnCamara = document.getElementById("btn-control-camara");
+            btnCamara.className = "btn btn-success";
+            btnCamara.innerText = "📸 Activar Cámara";
         }
 
         function cargarHistorialDesdeBoton() {
             const codigo = document.getElementById("codigo-detectado").value.trim();
             if (!codigo) {
-                alert("Ingrese un código de termo primero.");
+                alert("Ingrese o escanee un código de termo");
                 return;
             }
-            cargarHistorial(codigo);
+            consultarDatosTermo(codigo);
         }
 
-        async function cargarHistorial(codigo) {
+        // -------------------------------------------------------------
+        // CONSULTAS Y REGISTROS EN APPS SCRIPT
+        // -------------------------------------------------------------
+        async function consultarDatosTermo(codigo) {
             document.getElementById("lbl-termo-titulo").innerText = codigo;
             
-            // Cambiar a la pestaña de historial
-            const btnHistorial = document.getElementById("tab-btn-historial");
-            cambiarTab('tab-historial', btnHistorial);
+            // Redirigir a pestaña de historial para ver resultados
+            const tabHistorial = document.getElementById("tab-btn-historial");
+            cambiarTab('tab-historial', tabHistorial);
 
-            const res = await consumirApi("consultarTermoBackend", { codigo });
+            const respuesta = await consumirApi("consultarTermo", { codigo });
 
-            if (res.exito) {
-                document.getElementById("h-cliente-anterior").innerText = res.datos.clienteAnterior || "N/A";
-                document.getElementById("h-cliente-actual").innerText = res.datos.clienteActual || "En Planta";
-                document.getElementById("h-total-llenados").innerText = (res.datos.llenados ? res.datos.llenados.length : 0) + " registros";
-                document.getElementById("h-ultimo-llenado").innerText = res.datos.ultimoLlenado || "N/A";
+            if (respuesta && respuesta.exito) {
+                const datos = respuesta.datos || {};
+                document.getElementById("h-cliente-anterior").innerText = datos.clienteAnterior || "Sin datos";
+                document.getElementById("h-cliente-actual").innerText = datos.clienteActual || "Sin datos";
+                document.getElementById("h-total-llenados").innerText = (datos.llenados ? datos.llenados.length : 0) + " registros";
+                document.getElementById("h-ultimo-llenado").innerText = datos.ultimoLlenado || "N/A";
 
-                renderizarTabla("tabla-llenados", res.datos.llenados, ["fecha", "psiFin", "pctFin", "operador"]);
-                renderizarTabla("tabla-taller", res.datos.taller, ["fecha", "tipo", "descripcion", "tiempo", "estado"]);
-                renderizarTabla("tabla-inspecciones", res.datos.inspecciones, ["fecha", "presion", "danados"]);
-                renderizarTabla("tabla-custodia", res.datos.logistica, ["fecha", "cliente", "chofer"]);
+                renderizarTabla("tabla-llenados", datos.llenados, ["fecha", "psi", "nivel", "operador"]);
+                renderizarTabla("tabla-taller", datos.taller, ["fecha", "accion", "descripcion", "tiempo", "estado"]);
+                renderizarTabla("tabla-inspecciones", datos.inspecciones, ["fecha", "presion", "componentes"]);
+                renderizarTabla("tabla-custodia", datos.custodia, ["fecha", "cliente", "chofer"]);
             } else {
-                alert(res.mensaje || "Termo no encontrado.");
+                alert(respuesta.mensaje || "No se encontraron datos para este termo");
             }
         }
 
-        function renderizarTabla(idTabla, datos, campos) {
+        function renderizarTabla(idTabla, registros, campos) {
             const tbody = document.getElementById(idTabla).querySelector("tbody");
             tbody.innerHTML = "";
 
-            if (!datos || datos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${campos.length}" style="text-align: center; color: var(--text-muted);">Sin información.</td></tr>`;
+            if (!registros || registros.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${campos.length}" style="text-align: center; color: var(--text-muted);">Sin datos disponibles</td></tr>`;
                 return;
             }
 
-            datos.forEach(row => {
+            registros.forEach(item => {
                 const tr = document.createElement("tr");
                 campos.forEach(campo => {
                     const td = document.createElement("td");
-                    td.innerText = row[campo] || "-";
+                    td.innerText = item[campo] !== undefined ? item[campo] : "-";
                     tr.appendChild(td);
                 });
                 tbody.appendChild(tr);
@@ -950,7 +971,7 @@
         }
 
         async function registrarTermo() {
-            const datos = {
+            const payload = {
                 codigo: document.getElementById("reg-codigo").value.trim(),
                 serie: document.getElementById("reg-serie").value.trim(),
                 capacidad: document.getElementById("reg-capacidad").value,
@@ -958,14 +979,18 @@
                 observaciones: document.getElementById("reg-observaciones").value.trim()
             };
 
-            if (!datos.codigo) return alert("Ingrese el código del termo.");
+            if (!payload.codigo) return alert("Ingrese el código del termo");
 
-            const res = await consumirApi("registrarTermoBackend", datos);
-            alert(res.mensaje);
+            const res = await consumirApi("registrarTermo", payload);
+            if (res.exito) {
+                alert("Termo registrado con éxito");
+            } else {
+                alert("Error: " + res.mensaje);
+            }
         }
 
         async function registrarLlenado() {
-            const datos = {
+            const payload = {
                 codigo: document.getElementById("llenado-codigo").value.trim(),
                 orcaIni: document.getElementById("llenado-orca-ini").value,
                 orcaFin: document.getElementById("llenado-orca-fin").value,
@@ -975,56 +1000,74 @@
                 pctFin: document.getElementById("llenado-pct-fin").value,
                 cantidad: document.getElementById("llenado-cantidad").value,
                 tiempo: document.getElementById("llenado-tiempo").value,
-                operador: document.getElementById("llenado-operador").value,
-                observaciones: document.getElementById("llenado-observaciones").value
+                operador: document.getElementById("llenado-operador").value.trim(),
+                observaciones: document.getElementById("llenado-observaciones").value.trim()
             };
 
-            if (!datos.codigo) return alert("Ingrese el código del termo.");
+            if (!payload.codigo) return alert("Ingrese el código del termo");
 
-            const res = await consumirApi("registrarLlenadoBackend", datos);
-            alert(res.mensaje);
+            const res = await consumirApi("registrarLlenado", payload);
+            if (res.exito) {
+                alert("Proceso de llenado guardado correctamente");
+            } else {
+                alert("Error: " + res.mensaje);
+            }
         }
 
         async function registrarTaller() {
-            const datos = {
+            const payload = {
                 codigo: document.getElementById("taller-codigo").value.trim(),
                 tipo: document.getElementById("taller-tipo").value,
-                descripcion: document.getElementById("taller-descripcion").value,
-                tiempo: document.getElementById("taller-tiempo").value,
+                descripcion: document.getElementById("taller-descripcion").value.trim(),
+                tiempo: document.getElementById("taller-tiempo").value.trim(),
                 estado: document.getElementById("taller-estado").value
             };
 
-            if (!datos.codigo) return alert("Ingrese el código del termo.");
+            if (!payload.codigo) return alert("Ingrese el código del termo");
 
-            const res = await consumirApi("registrarTallerBackend", datos);
-            alert(res.mensaje);
+            const res = await consumirApi("registrarTaller", payload);
+            if (res.exito) {
+                alert("Mantenimiento registrado correctamente");
+            } else {
+                alert("Error: " + res.mensaje);
+            }
         }
 
         async function registrarLogistica() {
-            const datos = {
+            const payload = {
                 codigo: document.getElementById("log-codigo").value.trim(),
-                cliente: document.getElementById("log-cliente").value,
-                chofer: document.getElementById("log-chofer").value
+                cliente: document.getElementById("log-cliente").value.trim(),
+                chofer: document.getElementById("log-chofer").value.trim()
             };
 
-            if (!datos.codigo) return alert("Ingrese el código del termo.");
+            if (!payload.codigo || !payload.cliente) return alert("Complete los datos requeridos");
 
-            const res = await consumirApi("registrarLogisticaBackend", datos);
-            alert(res.mensaje);
+            const res = await consumirApi("registrarLogistica", payload);
+            if (res.exito) {
+                alert("Despacho logístico actualizado");
+            } else {
+                alert("Error: " + res.mensaje);
+            }
         }
 
         async function registrarInspeccion() {
-            const danados = Array.from(document.querySelectorAll(".comp-danado:checked")).map(cb => cb.value);
-            const datos = {
+            const checkboxes = document.querySelectorAll(".comp-danado:checked");
+            const danados = Array.from(checkboxes).map(cb => cb.value);
+
+            const payload = {
                 codigo: document.getElementById("insp-codigo").value.trim(),
                 presion: document.getElementById("insp-presion").value,
-                danados: danados.join(", ")
+                componentesDanados: danados.join(", ")
             };
 
-            if (!datos.codigo) return alert("Ingrese el código del termo.");
+            if (!payload.codigo) return alert("Ingrese el código del termo");
 
-            const res = await consumirApi("registrarInspeccionBackend", datos);
-            alert(res.mensaje);
+            const res = await consumirApi("registrarInspeccion", payload);
+            if (res.exito) {
+                alert("Inspección guardada correctamente");
+            } else {
+                alert("Error: " + res.mensaje);
+            }
         }
     </script>
 </body>
