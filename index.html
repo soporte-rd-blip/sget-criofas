@@ -778,179 +778,195 @@
         });
 
         function alternarVisibilidadPassword() {
-            const input = document.getElementById('clave');
-            input.type = input.type === 'password' ? 'text' : 'password';
+            const input = document.getElementById("clave");
+            input.type = input.type === "password" ? "text" : "password";
         }
 
         async function consumirApi(accion, datos = {}) {
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'cors',
+                    redirect: 'follow',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ accion, ...datos })
                 });
                 return await response.json();
             } catch (err) {
-                console.error("Error API:", err);
+                console.error("Error de red o comunicación:", err);
                 return { exito: false, mensaje: "Error de comunicación con el servidor." };
             }
         }
 
         async function login() {
-            const usuario = document.getElementById("usuario").value.trim();
-            const clave = document.getElementById("clave").value.trim();
-
-            if (!usuario || !clave) {
+            const user = document.getElementById("usuario").value.trim();
+            const pass = document.getElementById("clave").value.trim();
+            
+            if (!user || !pass) {
                 alert("Por favor ingrese usuario y contraseña.");
                 return;
             }
 
-            const res = await consumirApi("hacerLogin", { usuario, clave });
+            const btn = document.getElementById("btn-login");
+            btn.disabled = true;
+            btn.innerText = "Verificando...";
+
+            const res = await consumirApi("hacerLogin", { usuario: user, clave: pass });
+            
+            btn.disabled = false;
+            btn.innerText = "Ingresar al Sistema";
+
             if (res.exito) {
-                localStorage.setItem("nombre", res.nombre);
-                localStorage.setItem("rol", res.rol);
-                iniciarSesionUI(res.nombre, res.rol);
+                localStorage.setItem("nombre", res.nombre || user);
+                localStorage.setItem("rol", res.rol || "Operador");
+                iniciarSesionUI(res.nombre || user, res.rol || "Operador");
             } else {
-                alert(res.mensaje || "Credenciales incorrectas.");
+                alert(res.mensaje || "Credenciales incorrectas");
             }
         }
 
         function iniciarSesionUI(nombre, rol) {
-            document.getElementById("nombre-usuario").textContent = nombre;
-            document.getElementById("badge-rol").textContent = rol;
             document.getElementById("pantalla-login").style.display = "none";
             document.getElementById("pantalla-dashboard").style.display = "block";
+            document.getElementById("nombre-usuario").innerText = nombre;
+            document.getElementById("badge-rol").innerText = rol;
             document.getElementById("llenado-operador").value = nombre;
         }
 
         function cerrarSesion() {
             localStorage.clear();
             if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear().catch(console.error);
+                detenerEscaner();
             }
-            location.reload();
+            document.getElementById("pantalla-dashboard").style.display = "none";
+            document.getElementById("pantalla-login").style.display = "flex";
         }
 
-        function cambiarTab(tabId, btnElement) {
-            document.querySelectorAll(".modulo-pane").forEach(pane => pane.classList.remove("active"));
-            document.querySelectorAll(".menu-tab").forEach(tab => tab.classList.remove("active"));
+        function cambiarTab(idTab, btn) {
+            document.querySelectorAll(".modulo-pane").forEach(p => p.classList.remove("active"));
+            document.querySelectorAll(".menu-tab").forEach(t => t.classList.remove("active"));
             
-            document.getElementById(tabId).classList.add("active");
-            if (btnElement) btnElement.classList.add("active");
+            document.getElementById(idTab).classList.add("active");
+            btn.classList.add("active");
 
-            if (tabId !== 'tab-inicio' && html5QrcodeScanner) {
+            if (idTab !== 'tab-inicio' && html5QrcodeScanner) {
                 detenerEscaner();
             }
         }
 
         function sincronizarCodigos(codigo) {
-            const cod = codigo.toUpperCase().trim();
-            document.getElementById("codigo-detectado").value = cod;
-            document.getElementById("llenado-codigo").value = cod;
-            document.getElementById("taller-codigo").value = cod;
-            document.getElementById("log-codigo").value = cod;
-            document.getElementById("insp-codigo").value = cod;
-            document.getElementById("reg-codigo").value = cod;
+            codigo = codigo.toUpperCase().trim();
+            document.getElementById("reg-codigo").value = codigo;
+            document.getElementById("llenado-codigo").value = codigo;
+            document.getElementById("taller-codigo").value = codigo;
+            document.getElementById("log-codigo").value = codigo;
+            document.getElementById("insp-codigo").value = codigo;
         }
 
         function alternarEscaner() {
-            const zona = document.getElementById("zona-escaneo");
             const btn = document.getElementById("btn-control-camara");
+            const zona = document.getElementById("zona-escaneo");
 
             if (html5QrcodeScanner) {
                 detenerEscaner();
             } else {
                 zona.style.display = "block";
-                btn.textContent = "🛑 Detener Cámara";
                 btn.className = "btn btn-danger";
+                btn.innerText = "🛑 Detener Cámara";
 
                 html5QrcodeScanner = new Html5QrcodeScanner("zona-escaneo", { fps: 10, qrbox: 250 });
                 html5QrcodeScanner.render((decodedText) => {
+                    document.getElementById("codigo-detectado").value = decodedText;
                     sincronizarCodigos(decodedText);
                     detenerEscaner();
                     cargarHistorial(decodedText);
-                }, (error) => { /* Ignorar errores de lecturas fallidas por frame */ });
+                }, (error) => {
+                    // Mute scanner error logs
+                });
             }
         }
 
         function detenerEscaner() {
             if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear().then(() => {
-                    html5QrcodeScanner = null;
-                    document.getElementById("zona-escaneo").style.display = "none";
-                    const btn = document.getElementById("btn-control-camara");
-                    btn.textContent = "📸 Activar Cámara";
-                    btn.className = "btn btn-success";
-                }).catch(console.error);
+                html5QrcodeScanner.clear().catch(e => console.error(e));
+                html5QrcodeScanner = null;
             }
+            document.getElementById("zona-escaneo").style.display = "none";
+            const btn = document.getElementById("btn-control-camara");
+            btn.className = "btn btn-success";
+            btn.innerText = "📸 Activar Cámara";
         }
 
         function cargarHistorialDesdeBoton() {
-            const cod = document.getElementById("codigo-detectado").value.trim();
-            if (!cod) return alert("Ingrese un código de termo válido.");
-            cargarHistorial(cod);
+            const codigo = document.getElementById("codigo-detectado").value.trim();
+            if (!codigo) {
+                alert("Ingrese un código de termo primero.");
+                return;
+            }
+            cargarHistorial(codigo);
         }
 
         async function cargarHistorial(codigo) {
-            cambiarTab('tab-historial', document.getElementById('tab-btn-historial'));
-            document.getElementById("lbl-termo-titulo").textContent = codigo;
+            document.getElementById("lbl-termo-titulo").innerText = codigo;
+            
+            // Cambiar a la pestaña de historial
+            const btnHistorial = document.getElementById("tab-btn-historial");
+            cambiarTab('tab-historial', btnHistorial);
 
             const res = await consumirApi("consultarTermoBackend", { codigo });
-            if (!res.exito) {
+
+            if (res.exito) {
+                document.getElementById("h-cliente-anterior").innerText = res.datos.clienteAnterior || "N/A";
+                document.getElementById("h-cliente-actual").innerText = res.datos.clienteActual || "En Planta";
+                document.getElementById("h-total-llenados").innerText = (res.datos.llenados ? res.datos.llenados.length : 0) + " registros";
+                document.getElementById("h-ultimo-llenado").innerText = res.datos.ultimoLlenado || "N/A";
+
+                renderizarTabla("tabla-llenados", res.datos.llenados, ["fecha", "psiFin", "pctFin", "operador"]);
+                renderizarTabla("tabla-taller", res.datos.taller, ["fecha", "tipo", "descripcion", "tiempo", "estado"]);
+                renderizarTabla("tabla-inspecciones", res.datos.inspecciones, ["fecha", "presion", "danados"]);
+                renderizarTabla("tabla-custodia", res.datos.logistica, ["fecha", "cliente", "chofer"]);
+            } else {
                 alert(res.mensaje || "Termo no encontrado.");
+            }
+        }
+
+        function renderizarTabla(idTabla, datos, campos) {
+            const tbody = document.getElementById(idTabla).querySelector("tbody");
+            tbody.innerHTML = "";
+
+            if (!datos || datos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${campos.length}" style="text-align: center; color: var(--text-muted);">Sin información.</td></tr>`;
                 return;
             }
 
-            document.getElementById("h-cliente-anterior").textContent = res.clienteAnterior || "N/A";
-            document.getElementById("h-cliente-actual").textContent = res.clienteActual || "En Planta";
-            document.getElementById("h-total-llenados").textContent = `${res.llenados.length} registros`;
-            document.getElementById("h-ultimo-llenado").textContent = res.llenados[0]?.fecha || "N/A";
-
-            // Llenados
-            const tbLlenados = document.querySelector("#tabla-llenados tbody");
-            tbLlenados.innerHTML = res.llenados.length ? res.llenados.map(l => 
-                `<tr><td>${l.fecha}</td><td>${l.psi}</td><td>${l.pct}%</td><td>${l.operador}</td></tr>`
-            ).join('') : '<tr><td colspan="4" style="text-align:center;">Sin registros</td></tr>';
-
-            // Taller
-            const tbTaller = document.querySelector("#tabla-taller tbody");
-            tbTaller.innerHTML = res.mantenimientos.length ? res.mantenimientos.map(m => 
-                `<tr><td>${m.fecha}</td><td>${m.accion}</td><td>${m.descripcion}</td><td>${m.tiempo}</td><td>${m.estado}</td></tr>`
-            ).join('') : '<tr><td colspan="5" style="text-align:center;">Sin registros</td></tr>';
-
-            // Inspecciones
-            const tbInsp = document.querySelector("#tabla-inspecciones tbody");
-            tbInsp.innerHTML = res.inspecciones.length ? res.inspecciones.map(i => 
-                `<tr><td>${i.fecha}</td><td>${i.psi}</td><td>${i.componentes}</td></tr>`
-            ).join('') : '<tr><td colspan="3" style="text-align:center;">Sin registros</td></tr>';
-
-            // Logística
-            const tbCustodia = document.querySelector("#tabla-custodia tbody");
-            tbCustodia.innerHTML = res.logistica.length ? res.logistica.map(g => 
-                `<tr><td>${g.fecha}</td><td>${g.cliente}</td><td>${g.chofer}</td></tr>`
-            ).join('') : '<tr><td colspan="3" style="text-align:center;">Sin registros</td></tr>';
+            datos.forEach(row => {
+                const tr = document.createElement("tr");
+                campos.forEach(campo => {
+                    const td = document.createElement("td");
+                    td.innerText = row[campo] || "-";
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
         }
 
         async function registrarTermo() {
-            const codigo = document.getElementById("reg-codigo").value.trim();
-            const serie = document.getElementById("reg-serie").value.trim();
-            const capacidad = document.getElementById("reg-capacidad").value;
-            const gas = document.getElementById("reg-gas").value;
-            const observaciones = document.getElementById("reg-observaciones").value;
+            const datos = {
+                codigo: document.getElementById("reg-codigo").value.trim(),
+                serie: document.getElementById("reg-serie").value.trim(),
+                capacidad: document.getElementById("reg-capacidad").value,
+                gas: document.getElementById("reg-gas").value,
+                observaciones: document.getElementById("reg-observaciones").value.trim()
+            };
 
-            if (!codigo) return alert("Ingrese el código del termo.");
+            if (!datos.codigo) return alert("Ingrese el código del termo.");
 
-            const res = await consumirApi("registrarTermoBackend", { codigo, serie, capacidad, gas, observaciones });
+            const res = await consumirApi("registrarTermoBackend", datos);
             alert(res.mensaje);
         }
 
         async function registrarLlenado() {
-            const codigo = document.getElementById("llenado-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo.");
-
             const datos = {
-                codigo,
+                codigo: document.getElementById("llenado-codigo").value.trim(),
                 orcaIni: document.getElementById("llenado-orca-ini").value,
                 orcaFin: document.getElementById("llenado-orca-fin").value,
                 termoIni: document.getElementById("llenado-termo-ini").value,
@@ -963,46 +979,51 @@
                 observaciones: document.getElementById("llenado-observaciones").value
             };
 
+            if (!datos.codigo) return alert("Ingrese el código del termo.");
+
             const res = await consumirApi("registrarLlenadoBackend", datos);
             alert(res.mensaje);
         }
 
         async function registrarTaller() {
-            const codigo = document.getElementById("taller-codigo").value.trim();
-            if (!codigo) return alert("Ingrese el código del termo.");
-
             const datos = {
-                codigo,
+                codigo: document.getElementById("taller-codigo").value.trim(),
                 tipo: document.getElementById("taller-tipo").value,
                 descripcion: document.getElementById("taller-descripcion").value,
                 tiempo: document.getElementById("taller-tiempo").value,
                 estado: document.getElementById("taller-estado").value
             };
 
+            if (!datos.codigo) return alert("Ingrese el código del termo.");
+
             const res = await consumirApi("registrarTallerBackend", datos);
             alert(res.mensaje);
         }
 
         async function registrarLogistica() {
-            const codigo = document.getElementById("log-codigo").value.trim();
-            const cliente = document.getElementById("log-cliente").value.trim();
-            const chofer = document.getElementById("log-chofer").value.trim();
+            const datos = {
+                codigo: document.getElementById("log-codigo").value.trim(),
+                cliente: document.getElementById("log-cliente").value,
+                chofer: document.getElementById("log-chofer").value
+            };
 
-            if (!codigo || !cliente) return alert("Código y Cliente son obligatorios.");
+            if (!datos.codigo) return alert("Ingrese el código del termo.");
 
-            const res = await consumirApi("registrarLogisticaBackend", { codigo, cliente, chofer });
+            const res = await consumirApi("registrarLogisticaBackend", datos);
             alert(res.mensaje);
         }
 
         async function registrarInspeccion() {
-            const codigo = document.getElementById("insp-codigo").value.trim();
-            const presion = document.getElementById("insp-presion").value;
-            
-            const seleccionados = Array.from(document.querySelectorAll(".comp-danado:checked")).map(c => c.value);
+            const danados = Array.from(document.querySelectorAll(".comp-danado:checked")).map(cb => cb.value);
+            const datos = {
+                codigo: document.getElementById("insp-codigo").value.trim(),
+                presion: document.getElementById("insp-presion").value,
+                danados: danados.join(", ")
+            };
 
-            if (!codigo) return alert("Ingrese el código del termo.");
+            if (!datos.codigo) return alert("Ingrese el código del termo.");
 
-            const res = await consumirApi("registrarInspeccionBackend", { codigo, presion, componentes: seleccionados.join(", ") });
+            const res = await consumirApi("registrarInspeccionBackend", datos);
             alert(res.mensaje);
         }
     </script>
