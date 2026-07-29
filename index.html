@@ -699,9 +699,9 @@
                 <div class="form-group">
                     <label for="taller-tipo">Acción Realizada</label>
                     <select id="taller-tipo">
-                        <option>Mantenimiento Preventivo Anual</option>
-                        <option>Reparación Correctiva (Fuga/Válvula)</option>
-                        <option>Prueba de Vacío</option>
+                        <option value="Mantenimiento Preventivo Anual">Mantenimiento Preventivo Anual</option>
+                        <option value="Reparación Correctiva (Fuga/Válvula)">Reparación Correctiva (Fuga/Válvula)</option>
+                        <option value="Prueba de Vacío">Prueba de Vacío</option>
                     </select>
                 </div>
                 <div class="form-group"><label for="taller-descripcion">Descripción del Trabajo</label><textarea id="taller-descripcion" rows="3"></textarea></div>
@@ -782,261 +782,228 @@
             input.type = input.type === 'password' ? 'text' : 'password';
         }
 
+        async function consumirApi(accion, datos = {}) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ accion, ...datos })
+                });
+                return await response.json();
+            } catch (err) {
+                console.error("Error API:", err);
+                return { exito: false, mensaje: "Error de comunicación con el servidor." };
+            }
+        }
+
         async function login() {
-            const usuario = document.getElementById('usuario').value.trim();
-            const clave = document.getElementById('clave').value.trim();
-            const btn = document.getElementById('btn-login');
+            const usuario = document.getElementById("usuario").value.trim();
+            const clave = document.getElementById("clave").value.trim();
 
             if (!usuario || !clave) {
-                alert("Por favor ingrese usuario y contraseña");
+                alert("Por favor ingrese usuario y contraseña.");
                 return;
             }
 
-            btn.disabled = true;
-            btn.innerText = "Verificando...";
-
-            try {
-                const res = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        'action': 'login',
-                        'usuario': usuario,
-                        'clave': clave
-                    })
-                });
-
-                const data = await res.json();
-
-                if (data.status === 'success') {
-                    localStorage.setItem("rol", data.rol);
-                    localStorage.setItem("nombre", data.nombre || usuario);
-                    iniciarSesionUI(data.nombre || usuario, data.rol);
-                } else {
-                    alert(data.message || "Credenciales incorrectas");
-                }
-            } catch (err) {
-                alert("Error de conexión con el servidor");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Ingresar al Sistema";
+            const res = await consumirApi("hacerLogin", { usuario, clave });
+            if (res.exito) {
+                localStorage.setItem("nombre", res.nombre);
+                localStorage.setItem("rol", res.rol);
+                iniciarSesionUI(res.nombre, res.rol);
+            } else {
+                alert(res.mensaje || "Credenciales incorrectas.");
             }
         }
 
         function iniciarSesionUI(nombre, rol) {
-            document.getElementById('pantalla-login').style.display = 'none';
-            document.getElementById('pantalla-dashboard').style.display = 'block';
-            document.getElementById('nombre-usuario').innerText = nombre;
-            document.getElementById('badge-rol').innerText = rol;
-
-            // Pre-llenar operadores con el nombre de usuario activo
-            document.getElementById('llenado-operador').value = nombre;
+            document.getElementById("nombre-usuario").textContent = nombre;
+            document.getElementById("badge-rol").textContent = rol;
+            document.getElementById("pantalla-login").style.display = "none";
+            document.getElementById("pantalla-dashboard").style.display = "block";
+            document.getElementById("llenado-operador").value = nombre;
         }
 
         function cerrarSesion() {
             localStorage.clear();
             if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear().catch(() => {});
+                html5QrcodeScanner.clear().catch(console.error);
             }
             location.reload();
         }
 
-        function cambiarTab(tabId, btn) {
-            document.querySelectorAll('.modulo-pane').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.menu-tab').forEach(el => el.classList.remove('active'));
+        function cambiarTab(tabId, btnElement) {
+            document.querySelectorAll(".modulo-pane").forEach(pane => pane.classList.remove("active"));
+            document.querySelectorAll(".menu-tab").forEach(tab => tab.classList.remove("active"));
             
-            document.getElementById(tabId).classList.add('active');
-            btn.classList.add('active');
+            document.getElementById(tabId).classList.add("active");
+            if (btnElement) btnElement.classList.add("active");
+
+            if (tabId !== 'tab-inicio' && html5QrcodeScanner) {
+                detenerEscaner();
+            }
         }
 
         function sincronizarCodigos(codigo) {
-            codigo = codigo.toUpperCase();
-            document.getElementById('codigo-detectado').value = codigo;
-            document.getElementById('reg-codigo').value = codigo;
-            document.getElementById('llenado-codigo').value = codigo;
-            document.getElementById('taller-codigo').value = codigo;
-            document.getElementById('log-codigo').value = codigo;
-            document.getElementById('insp-codigo').value = codigo;
+            const cod = codigo.toUpperCase().trim();
+            document.getElementById("codigo-detectado").value = cod;
+            document.getElementById("llenado-codigo").value = cod;
+            document.getElementById("taller-codigo").value = cod;
+            document.getElementById("log-codigo").value = cod;
+            document.getElementById("insp-codigo").value = cod;
+            document.getElementById("reg-codigo").value = cod;
         }
 
         function alternarEscaner() {
-            const zona = document.getElementById('zona-escaneo');
-            const btn = document.getElementById('btn-control-camara');
+            const zona = document.getElementById("zona-escaneo");
+            const btn = document.getElementById("btn-control-camara");
 
-            if (zona.style.display === 'block') {
-                if (html5QrcodeScanner) {
-                    html5QrcodeScanner.clear().then(() => {
-                        zona.style.display = 'none';
-                        btn.innerText = "📸 Activar Cámara";
-                        btn.className = "btn btn-success";
-                    });
-                }
+            if (html5QrcodeScanner) {
+                detenerEscaner();
             } else {
-                zona.style.display = 'block';
-                btn.innerText = "🛑 Detener Cámara";
+                zona.style.display = "block";
+                btn.textContent = "🛑 Detener Cámara";
                 btn.className = "btn btn-danger";
 
-                html5QrcodeScanner = new Html5QrcodeScanner("zona-escaneo", { 
-                    fps: 10, 
-                    qrbox: { width: 250, height: 250 } 
-                });
+                html5QrcodeScanner = new Html5QrcodeScanner("zona-escaneo", { fps: 10, qrbox: 250 });
+                html5QrcodeScanner.render((decodedText) => {
+                    sincronizarCodigos(decodedText);
+                    detenerEscaner();
+                    cargarHistorial(decodedText);
+                }, (error) => { /* Ignorar errores de lecturas fallidas por frame */ });
+            }
+        }
 
-                html5QrcodeScanner.render((text) => {
-                    sincronizarCodigos(text);
-                    html5QrcodeScanner.clear();
-                    zona.style.display = 'none';
-                    btn.innerText = "📸 Activar Cámara";
+        function detenerEscaner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().then(() => {
+                    html5QrcodeScanner = null;
+                    document.getElementById("zona-escaneo").style.display = "none";
+                    const btn = document.getElementById("btn-control-camara");
+                    btn.textContent = "📸 Activar Cámara";
                     btn.className = "btn btn-success";
-                    cargarHistorial(text);
-                }, () => {});
+                }).catch(console.error);
             }
         }
 
         function cargarHistorialDesdeBoton() {
-            const codigo = document.getElementById('codigo-detectado').value;
-            if (!codigo) {
-                alert("Ingrese o escanee un código de termo primero.");
-                return;
-            }
-            cargarHistorial(codigo);
+            const cod = document.getElementById("codigo-detectado").value.trim();
+            if (!cod) return alert("Ingrese un código de termo válido.");
+            cargarHistorial(cod);
         }
 
         async function cargarHistorial(codigo) {
-            sincronizarCodigos(codigo);
-            document.getElementById('lbl-termo-titulo').innerText = codigo;
-
-            // Cambiar dinámicamente a la pestaña de historial
             cambiarTab('tab-historial', document.getElementById('tab-btn-historial'));
+            document.getElementById("lbl-termo-titulo").textContent = codigo;
 
-            try {
-                const res = await fetch(`${API_URL}?action=getHistorial&termo=${encodeURIComponent(codigo)}`);
-                const data = await res.json();
-
-                if (data.status === 'success') {
-                    // Métricas rápidas
-                    document.getElementById('h-cliente-anterior').innerText = data.clienteAnterior || 'Sin Registro';
-                    document.getElementById('h-cliente-actual').innerText = data.clienteActual || 'Sin Registro';
-                    document.getElementById('h-total-llenados').innerText = (data.llenados ? data.llenados.length : 0) + ' registros';
-                    document.getElementById('h-ultimo-llenado').innerText = data.ultimoLlenado || 'N/A';
-
-                    // Tabla Llenados
-                    const tLlenado = document.querySelector('#tabla-llenados tbody');
-                    tLlenado.innerHTML = data.llenados && data.llenados.length ? data.llenados.map(r => 
-                        `<tr><td>${r.fecha}</td><td>${r.psi}</td><td>${r.nivel}%</td><td>${r.operador}</td></tr>`
-                    ).join('') : '<tr><td colspan="4" style="text-align:center;">Sin registros</td></tr>';
-
-                    // Tabla Taller
-                    const tTaller = document.querySelector('#tabla-taller tbody');
-                    tTaller.innerHTML = data.taller && data.taller.length ? data.taller.map(r => 
-                        `<tr><td>${r.fecha}</td><td>${r.accion}</td><td>${r.descripcion}</td><td>${r.tiempo}</td><td>${r.estado}</td></tr>`
-                    ).join('') : '<tr><td colspan="5" style="text-align:center;">Sin registros</td></tr>';
-
-                    // Tabla Inspecciones
-                    const tInsp = document.querySelector('#tabla-inspecciones tbody');
-                    tInsp.innerHTML = data.inspecciones && data.inspecciones.length ? data.inspecciones.map(r => 
-                        `<tr><td>${r.fecha}</td><td>${r.psi}</td><td>${r.componentes}</td></tr>`
-                    ).join('') : '<tr><td colspan="3" style="text-align:center;">Sin registros</td></tr>';
-
-                    // Tabla Custodia/Logística
-                    const tCust = document.querySelector('#tabla-custodia tbody');
-                    tCust.innerHTML = data.custodia && data.custodia.length ? data.custodia.map(r => 
-                        `<tr><td>${r.fecha}</td><td>${r.cliente}</td><td>${r.chofer}</td></tr>`
-                    ).join('') : '<tr><td colspan="3" style="text-align:center;">Sin registros</td></tr>';
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Error al cargar la información del termo.");
+            const res = await consumirApi("consultarTermoBackend", { codigo });
+            if (!res.exito) {
+                alert(res.mensaje || "Termo no encontrado.");
+                return;
             }
-        }
 
-        async function enviarFormulario(action, datos) {
-            datos.append('action', action);
-            try {
-                const res = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams(datos)
-                });
-                const result = await res.json();
-                alert(result.message || "Operación completada con éxito.");
-                return result;
-            } catch (e) {
-                alert("Error al procesar la solicitud.");
-            }
+            document.getElementById("h-cliente-anterior").textContent = res.clienteAnterior || "N/A";
+            document.getElementById("h-cliente-actual").textContent = res.clienteActual || "En Planta";
+            document.getElementById("h-total-llenados").textContent = `${res.llenados.length} registros`;
+            document.getElementById("h-ultimo-llenado").textContent = res.llenados[0]?.fecha || "N/A";
+
+            // Llenados
+            const tbLlenados = document.querySelector("#tabla-llenados tbody");
+            tbLlenados.innerHTML = res.llenados.length ? res.llenados.map(l => 
+                `<tr><td>${l.fecha}</td><td>${l.psi}</td><td>${l.pct}%</td><td>${l.operador}</td></tr>`
+            ).join('') : '<tr><td colspan="4" style="text-align:center;">Sin registros</td></tr>';
+
+            // Taller
+            const tbTaller = document.querySelector("#tabla-taller tbody");
+            tbTaller.innerHTML = res.mantenimientos.length ? res.mantenimientos.map(m => 
+                `<tr><td>${m.fecha}</td><td>${m.accion}</td><td>${m.descripcion}</td><td>${m.tiempo}</td><td>${m.estado}</td></tr>`
+            ).join('') : '<tr><td colspan="5" style="text-align:center;">Sin registros</td></tr>';
+
+            // Inspecciones
+            const tbInsp = document.querySelector("#tabla-inspecciones tbody");
+            tbInsp.innerHTML = res.inspecciones.length ? res.inspecciones.map(i => 
+                `<tr><td>${i.fecha}</td><td>${i.psi}</td><td>${i.componentes}</td></tr>`
+            ).join('') : '<tr><td colspan="3" style="text-align:center;">Sin registros</td></tr>';
+
+            // Logística
+            const tbCustodia = document.querySelector("#tabla-custodia tbody");
+            tbCustodia.innerHTML = res.logistica.length ? res.logistica.map(g => 
+                `<tr><td>${g.fecha}</td><td>${g.cliente}</td><td>${g.chofer}</td></tr>`
+            ).join('') : '<tr><td colspan="3" style="text-align:center;">Sin registros</td></tr>';
         }
 
         async function registrarTermo() {
-            const codigo = document.getElementById('reg-codigo').value;
-            if (!codigo) return alert("Ingrese el código del termo");
+            const codigo = document.getElementById("reg-codigo").value.trim();
+            const serie = document.getElementById("reg-serie").value.trim();
+            const capacidad = document.getElementById("reg-capacidad").value;
+            const gas = document.getElementById("reg-gas").value;
+            const observaciones = document.getElementById("reg-observaciones").value;
 
-            const params = new FormData();
-            params.append('codigo', codigo);
-            params.append('serie', document.getElementById('reg-serie').value);
-            params.append('capacidad', document.getElementById('reg-capacidad').value);
-            params.append('gas', document.getElementById('reg-gas').value);
-            params.append('observaciones', document.getElementById('reg-observaciones').value);
+            if (!codigo) return alert("Ingrese el código del termo.");
 
-            await enviarFormulario('registrarTermo', params);
+            const res = await consumirApi("registrarTermoBackend", { codigo, serie, capacidad, gas, observaciones });
+            alert(res.mensaje);
         }
 
         async function registrarLlenado() {
-            const codigo = document.getElementById('llenado-codigo').value;
-            if (!codigo) return alert("Ingrese el código del termo");
+            const codigo = document.getElementById("llenado-codigo").value.trim();
+            if (!codigo) return alert("Ingrese el código del termo.");
 
-            const params = new FormData();
-            params.append('codigo', codigo);
-            params.append('orcaIni', document.getElementById('llenado-orca-ini').value);
-            params.append('orcaFin', document.getElementById('llenado-orca-fin').value);
-            params.append('termoIni', document.getElementById('llenado-termo-ini').value);
-            params.append('termoFin', document.getElementById('llenado-termo-fin').value);
-            params.append('pctIni', document.getElementById('llenado-pct-ini').value);
-            params.append('pctFin', document.getElementById('llenado-pct-fin').value);
-            params.append('cantidad', document.getElementById('llenado-cantidad').value);
-            params.append('tiempo', document.getElementById('llenado-tiempo').value);
-            params.append('operador', document.getElementById('llenado-operador').value);
-            params.append('observaciones', document.getElementById('llenado-observaciones').value);
+            const datos = {
+                codigo,
+                orcaIni: document.getElementById("llenado-orca-ini").value,
+                orcaFin: document.getElementById("llenado-orca-fin").value,
+                termoIni: document.getElementById("llenado-termo-ini").value,
+                termoFin: document.getElementById("llenado-termo-fin").value,
+                pctIni: document.getElementById("llenado-pct-ini").value,
+                pctFin: document.getElementById("llenado-pct-fin").value,
+                cantidad: document.getElementById("llenado-cantidad").value,
+                tiempo: document.getElementById("llenado-tiempo").value,
+                operador: document.getElementById("llenado-operador").value,
+                observaciones: document.getElementById("llenado-observaciones").value
+            };
 
-            await enviarFormulario('registrarLlenado', params);
+            const res = await consumirApi("registrarLlenadoBackend", datos);
+            alert(res.mensaje);
         }
 
         async function registrarTaller() {
-            const codigo = document.getElementById('taller-codigo').value;
-            if (!codigo) return alert("Ingrese el código del termo");
+            const codigo = document.getElementById("taller-codigo").value.trim();
+            if (!codigo) return alert("Ingrese el código del termo.");
 
-            const params = new FormData();
-            params.append('codigo', codigo);
-            params.append('tipo', document.getElementById('taller-tipo').value);
-            params.append('descripcion', document.getElementById('taller-descripcion').value);
-            params.append('tiempo', document.getElementById('taller-tiempo').value);
-            params.append('estado', document.getElementById('taller-estado').value);
+            const datos = {
+                codigo,
+                tipo: document.getElementById("taller-tipo").value,
+                descripcion: document.getElementById("taller-descripcion").value,
+                tiempo: document.getElementById("taller-tiempo").value,
+                estado: document.getElementById("taller-estado").value
+            };
 
-            await enviarFormulario('registrarTaller', params);
+            const res = await consumirApi("registrarTallerBackend", datos);
+            alert(res.mensaje);
         }
 
         async function registrarLogistica() {
-            const codigo = document.getElementById('log-codigo').value;
-            if (!codigo) return alert("Ingrese el código del termo");
+            const codigo = document.getElementById("log-codigo").value.trim();
+            const cliente = document.getElementById("log-cliente").value.trim();
+            const chofer = document.getElementById("log-chofer").value.trim();
 
-            const params = new FormData();
-            params.append('codigo', codigo);
-            params.append('cliente', document.getElementById('log-cliente').value);
-            params.append('chofer', document.getElementById('log-chofer').value);
+            if (!codigo || !cliente) return alert("Código y Cliente son obligatorios.");
 
-            await enviarFormulario('registrarLogistica', params);
+            const res = await consumirApi("registrarLogisticaBackend", { codigo, cliente, chofer });
+            alert(res.mensaje);
         }
 
         async function registrarInspeccion() {
-            const codigo = document.getElementById('insp-codigo').value;
-            if (!codigo) return alert("Ingrese el código del termo");
+            const codigo = document.getElementById("insp-codigo").value.trim();
+            const presion = document.getElementById("insp-presion").value;
+            
+            const seleccionados = Array.from(document.querySelectorAll(".comp-danado:checked")).map(c => c.value);
 
-            const marcados = Array.from(document.querySelectorAll('.comp-danado:checked')).map(cb => cb.value);
+            if (!codigo) return alert("Ingrese el código del termo.");
 
-            const params = new FormData();
-            params.append('codigo', codigo);
-            params.append('presion', document.getElementById('insp-presion').value);
-            params.append('danados', marcados.join(', '));
-
-            await enviarFormulario('registrarInspeccion', params);
+            const res = await consumirApi("registrarInspeccionBackend", { codigo, presion, componentes: seleccionados.join(", ") });
+            alert(res.mensaje);
         }
     </script>
 </body>
